@@ -4,13 +4,22 @@ import { supabase } from '../lib/supabaseClient'
 
 function Account() {
   const [user, setUser] = useState(undefined)
+  const [dogs, setDogs] = useState([])
   const navigate = useNavigate()
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       const u = session?.user ?? null
       setUser(u)
-      if (!u) navigate('/', { replace: true })
+      if (!u) {
+        navigate('/', { replace: true })
+        return
+      }
+      supabase
+        .from('dogs')
+        .select('*')
+        .eq('owner_id', u.id)
+        .then(({ data }) => setDogs(data ?? []))
     })
   }, [navigate])
 
@@ -49,19 +58,52 @@ function Account() {
               <p className="text-sm font-semibold uppercase tracking-widest text-paw-blue mb-1">Your pals</p>
               <h2 className="font-display text-4xl uppercase tracking-tight text-gray-900">My Dogs</h2>
             </div>
-            <button className="bg-paw-red text-white text-sm font-semibold uppercase tracking-wide px-6 py-2 rounded-pill hover:bg-red-700 transition-colors">
-              + Add Dog
+            <button
+              onClick={() => navigate('/planner')}
+              className="bg-paw-red text-white text-sm font-semibold uppercase tracking-wide px-6 py-2 rounded-pill hover:bg-red-700 transition-colors"
+            >
+              Plan My Walk
             </button>
           </div>
 
-          {/* Empty state */}
-          <div className="bg-white rounded-3xl p-10 flex flex-col items-center text-center">
-            <span className="text-6xl mb-4">🐕</span>
-            <h3 className="font-display text-2xl uppercase tracking-tight text-gray-900 mb-2">No dogs yet</h3>
-            <p className="text-gray-500 text-sm leading-relaxed max-w-xs">
-              Add your dog to get personalized walk recommendations tailored to their breed and age.
-            </p>
-          </div>
+          {dogs.length === 0 ? (
+            <div className="bg-white rounded-3xl p-10 flex flex-col items-center text-center">
+              <span className="text-6xl mb-4">🐕</span>
+              <h3 className="font-display text-2xl uppercase tracking-tight text-gray-900 mb-2">No dogs yet</h3>
+              <p className="text-gray-500 text-sm leading-relaxed max-w-xs">
+                Add your dog to get personalized walk recommendations tailored to their breed and age.
+              </p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {dogs.map((dog) => (
+                <div key={dog.id} className="bg-white rounded-3xl p-6 flex items-center gap-5">
+                  {dog.image ? (
+                    <img src={dog.image} alt={dog.name} className="w-16 h-16 rounded-full object-cover flex-shrink-0" />
+                  ) : (
+                    <div className="w-16 h-16 rounded-full bg-paw-pink flex items-center justify-center text-2xl flex-shrink-0">
+                      🐾
+                    </div>
+                  )}
+                  <div>
+                    <h3 className="font-display text-xl uppercase tracking-tight text-gray-900">{dog.name}</h3>
+                    {dog.breed && <p className="text-sm text-gray-500">{dog.breed}</p>}
+                    <div className="flex gap-3 mt-1">
+                      {(dog.age_y != null || dog.age_m != null) && (
+                        <span className="text-xs text-gray-400">
+                          {dog.age_y > 0 && `${dog.age_y} yr${dog.age_y !== 1 ? 's' : ''}`}
+                          {dog.age_y > 0 && dog.age_m > 0 && ' '}
+                          {dog.age_m > 0 && `${dog.age_m} mo`}
+                          {dog.age_y === 0 && !dog.age_m && '< 1 mo'}
+                        </span>
+                      )}
+                      {dog.weight != null && <span className="text-xs text-gray-400">{dog.weight} kg</span>}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </section>
 
         {/* Settings */}
@@ -78,7 +120,7 @@ function Account() {
                 <p className="text-xs font-semibold uppercase tracking-widest text-gray-400 mb-0.5">Email</p>
                 <p className="text-sm text-gray-800">{user.email}</p>
               </div>
-            </div>
+            </div> 
 
             {/* Units row */}
             <div className="flex items-center justify-between px-8 py-5">

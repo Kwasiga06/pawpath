@@ -1,4 +1,6 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { supabase } from '../lib/supabaseClient'
 import BreedUploader from '../components/planner/BreedUploader'
 import WalkRecommendations from '../components/planner/WalkRecommendations'
 import MapView from '../components/planner/MapView'
@@ -8,6 +10,13 @@ export default function Planner() {
   const [breed, setBreed] = useState(null)
   const [analyzing, setAnalyzing] = useState(false)
   const resultsRef = useRef(null)
+  const navigate = useNavigate()
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!session) navigate('/')
+    })
+  }, [])
 
   function handleBreedDetected(detectedBreed) {
     setAnalyzing(true)
