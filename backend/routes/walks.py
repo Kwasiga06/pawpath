@@ -5,14 +5,17 @@ from fastapi import APIRouter, Query
 router = APIRouter()
 
 GOOGLE_MAPS_API_KEY = os.getenv("GOOGLE_MAPS_API_KEY")
-OPENWEATHERMAP_API_KEY = os.getenv("OPENWEATHERMAP_API_KEY")
 
 
 async def check_weather(client: httpx.AsyncClient, lat: float, lon: float):
-    """Fetch weather from OpenWeatherMap and air quality from Google Air Quality API."""
-    weather_resp = await client.get(
-        "https://api.openweathermap.org/data/2.5/weather",
-        params={"lat": lat, "lon": lon, "appid": OPENWEATHERMAP_API_KEY, "units": "imperial"}
+    """Fetch weather and air quality from Google APIs."""
+    weather_resp = await client.post(
+        "https://weather.googleapis.com/v1/currentConditions:lookup",
+        params={"key": GOOGLE_MAPS_API_KEY},
+        json={
+            "location": {"latitude": lat, "longitude": lon},
+            "unitsSystem": "IMPERIAL"
+        }
     )
     weather_data = weather_resp.json()
 
@@ -28,11 +31,11 @@ async def check_weather(client: httpx.AsyncClient, lat: float, lon: float):
     aqi_index = next((i for i in indexes if i.get("code") == "usa_epa"), indexes[0] if indexes else {})
 
     return {
-        "temperature": weather_data["main"]["temp"],
-        "feels_like": weather_data["main"]["feels_like"],
-        "humidity": weather_data["main"]["humidity"],
-        "description": weather_data["weather"][0]["description"],
-        "wind_speed": weather_data["wind"]["speed"],
+        "temperature": weather_data.get("temperature", {}).get("degrees"),
+        "feels_like": weather_data.get("feelsLikeTemperature", {}).get("degrees"),
+        "humidity": weather_data.get("relativeHumidity"),
+        "description": weather_data.get("weatherCondition", {}).get("description", {}).get("text"),
+        "wind_speed": weather_data.get("wind", {}).get("speed", {}).get("value"),
         "aqi": aqi_index.get("aqi", 0),
         "aqi_category": aqi_index.get("category", "Unknown"),
         "dominant_pollutant": aqi_index.get("dominantPollutant")
