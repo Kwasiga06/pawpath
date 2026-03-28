@@ -1,10 +1,25 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { supabase } from '../lib/supabaseClient'
 
 export default function Navbar() {
   const [open, setOpen] = useState(false)
+  const [user, setUser] = useState(null)
   const { pathname } = useLocation()
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null)
+    })
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null)
+    })
+    return () => subscription.unsubscribe()
+  }, [])
+
+  async function handleSignOut() {
+    await supabase.auth.signOut()
+  }
 
   async function handleSignUp() {
     await supabase.auth.signInWithOAuth({
@@ -12,6 +27,8 @@ export default function Navbar() {
       options: { redirectTo: window.location.origin },
     })
   }
+
+  const displayName = user?.user_metadata?.full_name?.split(' ')[0] || user?.email?.split('@')[0]
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-paw-cream/90 backdrop-blur-sm border-b border-paw-pink">
@@ -39,12 +56,29 @@ export default function Navbar() {
           >
             Plan My Walk
           </Link>
-          <button
-            onClick={handleSignUp}
-            className="border-2 border-gray-800 text-gray-800 text-sm font-semibold uppercase tracking-wide px-6 py-2 rounded-pill hover:bg-gray-800 hover:text-white transition-colors"
-          >
-            Sign Up
-          </button>
+          {user ? (
+            <>
+              <Link
+                to="/account"
+                className="border-2 border-gray-800 text-gray-800 text-sm font-semibold uppercase tracking-wide px-6 py-2 rounded-pill hover:bg-gray-800 hover:text-white transition-colors"
+              >
+                Hi, {displayName}
+              </Link>
+              <button
+                onClick={handleSignOut}
+                className="text-sm font-semibold uppercase tracking-wide text-gray-500 hover:text-paw-red transition-colors"
+              >
+                Sign out
+              </button>
+            </>
+          ) : (
+            <button
+              onClick={handleSignUp}
+              className="border-2 border-gray-800 text-gray-800 text-sm font-semibold uppercase tracking-wide px-6 py-2 rounded-pill hover:bg-gray-800 hover:text-white transition-colors"
+            >
+              Sign Up
+            </button>
+          )}
         </div>
 
         {/* Mobile hamburger */}
@@ -64,9 +98,20 @@ export default function Navbar() {
           <Link to="/planner" className="bg-paw-red text-white text-sm font-semibold uppercase tracking-wide px-6 py-2 rounded-pill text-center" onClick={() => setOpen(false)}>
             Plan My Walk
           </Link>
-          <button onClick={() => { setOpen(false); handleSignUp() }} className="border-2 border-gray-800 text-gray-800 text-sm font-semibold uppercase tracking-wide px-6 py-2 rounded-pill text-center">
-            Sign Up
-          </button>
+          {user ? (
+            <>
+              <Link to="/account" className="border-2 border-gray-800 text-gray-800 text-sm font-semibold uppercase tracking-wide px-6 py-2 rounded-pill text-center" onClick={() => setOpen(false)}>
+                Hi, {displayName}
+              </Link>
+              <button onClick={() => { setOpen(false); handleSignOut() }} className="text-sm font-semibold uppercase tracking-wide text-gray-500 hover:text-paw-red transition-colors text-center">
+                Sign out
+              </button>
+            </>
+          ) : (
+            <button onClick={() => { setOpen(false); handleSignUp() }} className="border-2 border-gray-800 text-gray-800 text-sm font-semibold uppercase tracking-wide px-6 py-2 rounded-pill text-center">
+              Sign Up
+            </button>
+          )}
         </div>
       )}
     </nav>
