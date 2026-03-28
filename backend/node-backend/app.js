@@ -1,6 +1,9 @@
 require('dotenv').config();
 const express = require ('express');
+const cors = require('cors');
 const app = express();
+
+app.use(cors({ origin: 'http://localhost:5173' }));
 const dogsRouter = require('./routes/dogs');
 const uploadRouter = require('./routes/upload');
 const appointmentsRouter = require('./routes/appointments');

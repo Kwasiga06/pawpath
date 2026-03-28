@@ -8,13 +8,31 @@ function Account() {
   const navigate = useNavigate()
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
       const u = session?.user ?? null
       setUser(u)
       if (!u) {
         navigate('/', { replace: true })
         return
       }
+
+      // Save pending dog from onboarding if present
+      const pending = localStorage.getItem('pending_dog')
+      if (pending) {
+        try {
+          const dog = JSON.parse(pending)
+          await supabase.from('dogs').insert({
+            owner_id: u.id,
+            name: dog.name || null,
+            breed: dog.breed || null,
+            size: dog.size || null,
+            weight: dog.weight || null,
+            age_y: parseFloat(dog.age) || null,
+          })
+        } catch {}
+        localStorage.removeItem('pending_dog')
+      }
+
       supabase
         .from('dogs')
         .select('*')

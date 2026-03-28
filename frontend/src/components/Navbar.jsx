@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react'
-import { Link, useLocation } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabaseClient'
 
 export default function Navbar() {
   const [open, setOpen] = useState(false)
   const [user, setUser] = useState(null)
+  const [hidden, setHidden] = useState(false)
   const { pathname } = useLocation()
+  const navigate = useNavigate()
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -17,21 +19,25 @@ export default function Navbar() {
     return () => subscription.unsubscribe()
   }, [])
 
+  useEffect(() => {
+    let lastY = window.scrollY
+    function onScroll() {
+      const currentY = window.scrollY
+      setHidden(currentY > lastY && currentY > 64)
+      lastY = currentY
+    }
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => window.removeEventListener('scroll', onScroll)
+  }, [])
+
   async function handleSignOut() {
     await supabase.auth.signOut()
-  }
-
-  async function handleSignUp() {
-    await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: { redirectTo: window.location.origin },
-    })
   }
 
   const displayName = user?.user_metadata?.full_name?.split(' ')[0] || user?.email?.split('@')[0]
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 bg-paw-cream/90 backdrop-blur-sm border-b border-paw-pink">
+    <nav className={`fixed top-0 left-0 right-0 z-50 bg-paw-cream/90 backdrop-blur-sm transition-transform duration-300 ${hidden ? '-translate-y-full' : 'translate-y-0'}`}>
       <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
         {/* Logo */}
         <Link to="/" className="flex items-center gap-2">
@@ -54,7 +60,7 @@ export default function Navbar() {
             <>
               <Link
                 to="/account"
-                className="border-2 border-gray-800 text-gray-800 text-sm font-semibold uppercase tracking-wide px-6 py-2 rounded-pill hover:bg-gray-800 hover:text-white transition-colors"
+                className="bg-paw-red text-white text-sm font-semibold uppercase tracking-wide px-6 py-2 rounded-pill hover:bg-red-700 transition-colors"
               >
                 Hi, {displayName}
               </Link>
@@ -67,8 +73,8 @@ export default function Navbar() {
             </>
           ) : (
             <button
-              onClick={handleSignUp}
-              className="border-2 border-gray-800 text-gray-800 text-sm font-semibold uppercase tracking-wide px-6 py-2 rounded-pill hover:bg-gray-800 hover:text-white transition-colors"
+              onClick={() => navigate('/onboard')}
+              className="bg-paw-red text-white text-sm font-semibold uppercase tracking-wide px-6 py-2 rounded-pill hover:bg-red-700 transition-colors"
             >
               Sign Up
             </button>
@@ -85,13 +91,13 @@ export default function Navbar() {
 
       {/* Mobile menu */}
       {open && (
-        <div className="md:hidden bg-paw-cream border-t border-paw-pink px-6 py-4 flex flex-col gap-4">
+        <div className="md:hidden bg-paw-cream px-6 py-4 flex flex-col gap-4">
           <Link to="/" className="text-sm font-semibold uppercase tracking-wide text-gray-700" onClick={() => setOpen(false)}>Home</Link>
-          <a href="/#how-it-works" className="text-sm font-semibold uppercase tracking-wide text-gray-700" onClick={() => setOpen(false)}>How It Works</a>
+          <a href="/#how-it-works" className="text-sm font-semibold uppercase tracking-wide text-gray-600 hover:text-paw-red transition-colors" onClick={() => setOpen(false)}>How It Works</a>
           <a href="/#features" className="text-sm font-semibold uppercase tracking-wide text-gray-700" onClick={() => setOpen(false)}>Features</a>
           {user ? (
             <>
-              <Link to="/account" className="border-2 border-gray-800 text-gray-800 text-sm font-semibold uppercase tracking-wide px-6 py-2 rounded-pill text-center" onClick={() => setOpen(false)}>
+              <Link to="/account" className="bg-paw-red text-white text-sm font-semibold uppercase tracking-wide px-6 py-2 rounded-pill text-center hover:bg-red-700 transition-colors" onClick={() => setOpen(false)}>
                 Hi, {displayName}
               </Link>
               <button onClick={() => { setOpen(false); handleSignOut() }} className="text-sm font-semibold uppercase tracking-wide text-gray-500 hover:text-paw-red transition-colors text-center">
@@ -99,7 +105,7 @@ export default function Navbar() {
               </button>
             </>
           ) : (
-            <button onClick={() => { setOpen(false); handleSignUp() }} className="border-2 border-gray-800 text-gray-800 text-sm font-semibold uppercase tracking-wide px-6 py-2 rounded-pill text-center">
+            <button onClick={() => { setOpen(false); navigate('/onboard') }} className="bg-paw-red text-white text-sm font-semibold uppercase tracking-wide px-6 py-2 rounded-pill text-center hover:bg-red-700 transition-colors">
               Sign Up
             </button>
           )}
