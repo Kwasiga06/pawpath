@@ -48,7 +48,7 @@ export default function Hero() {
           {/* Floating breed badge */}
           <div className="absolute bottom-8 -left-4 bg-paw-red text-white rounded-2xl shadow-lg px-4 py-3">
             <p className="text-xs uppercase tracking-wide opacity-80">Detected breed</p>
-            <p className="text-sm font-bold">Golden Retriever</p>
+            <p className="text-sm font-bold">Bernese Mountain</p>
           </div>
         </div>
 

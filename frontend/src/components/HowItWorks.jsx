@@ -1,3 +1,5 @@
+import { useEffect, useRef, useState } from 'react'
+
 const steps = [
   {
     number: '01',
@@ -17,10 +19,49 @@ const steps = [
     number: '03',
     icon: '🗺️',
     title: 'Get Your Route',
-    description: 'Receive a custom Google Maps walking route tailored to your dog\'s breed, energy level, and today\'s conditions.',
+    description: "Receive a custom Google Maps walking route tailored to your dog's breed, energy level, and today's conditions.",
     color: 'bg-paw-pink-mid',
   },
 ]
+
+function StepCard({ step, index }) {
+  const ref = useRef(null)
+  const [visible, setVisible] = useState(false)
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => { if (entry.isIntersecting) setVisible(true) },
+      { threshold: 0.2 }
+    )
+    if (ref.current) observer.observe(ref.current)
+    return () => observer.disconnect()
+  }, [])
+
+  return (
+    <div
+      ref={ref}
+      className="group relative"
+      style={{
+        opacity: visible ? 1 : 0,
+        transform: visible ? 'translateY(0)' : 'translateY(40px)',
+        transition: `opacity 0.6s ease ${index * 0.75}s, transform 0.6s ease ${index * 0.75}s`,
+      }}
+    >
+      <div className={`${step.color} rounded-3xl p-8 h-full transition-transform group-hover:-translate-y-2 duration-300`}>
+        <div className="flex items-start justify-between mb-6">
+          <span className="text-5xl">{step.icon}</span>
+          <span className="font-display text-6xl text-black/10">{step.number}</span>
+        </div>
+        <h3 className="font-display text-3xl uppercase tracking-tight text-gray-900 mb-3">
+          {step.title}
+        </h3>
+        <p className="text-gray-600 leading-relaxed">
+          {step.description}
+        </p>
+      </div>
+    </div>
+  )
+}
 
 export default function HowItWorks() {
   return (
@@ -34,21 +75,8 @@ export default function HowItWorks() {
         </div>
 
         <div className="grid md:grid-cols-3 gap-8">
-          {steps.map((step) => (
-            <div key={step.number} className="group relative">
-              <div className={`${step.color} rounded-3xl p-8 h-full transition-transform group-hover:-translate-y-2 duration-300`}>
-                <div className="flex items-start justify-between mb-6">
-                  <span className="text-5xl">{step.icon}</span>
-                  <span className="font-display text-6xl text-black/10">{step.number}</span>
-                </div>
-                <h3 className="font-display text-3xl uppercase tracking-tight text-gray-900 mb-3">
-                  {step.title}
-                </h3>
-                <p className="text-gray-600 leading-relaxed">
-                  {step.description}
-                </p>
-              </div>
-            </div>
+          {steps.map((step, index) => (
+            <StepCard key={step.number} step={step} index={index} />
           ))}
         </div>
       </div>
