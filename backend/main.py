@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from dotenv import load_dotenv
 
-from sources.gemini import router as gemini_router
+from routes.gemini import router as gemini_router
 
 load_dotenv()
 
