@@ -24,7 +24,7 @@ const steps = [
   },
 ]
 
-function StepCard({ step, index }) {
+function StepCard({ step }) {
   const ref = useRef(null)
   const [visible, setVisible] = useState(false)
 
@@ -44,7 +44,7 @@ function StepCard({ step, index }) {
       style={{
         opacity: visible ? 1 : 0,
         transform: visible ? 'translateY(0)' : 'translateY(40px)',
-        transition: `opacity 0.6s ease ${index * 0.75}s, transform 0.6s ease ${index * 0.75}s`,
+        transition: 'opacity 0.6s ease, transform 0.6s ease',
       }}
     >
       <div className={`${step.color} rounded-3xl p-8 h-full transition-transform group-hover:-translate-y-2 duration-300`}>
@@ -75,8 +75,8 @@ export default function HowItWorks() {
         </div>
 
         <div className="grid md:grid-cols-3 gap-8">
-          {steps.map((step, index) => (
-            <StepCard key={step.number} step={step} index={index} />
+          {steps.map((step) => (
+            <StepCard key={step.number} step={step} />
           ))}
         </div>
       </div>
