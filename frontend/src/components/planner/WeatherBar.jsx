@@ -39,28 +39,30 @@ export default function WeatherBar() {
           const geoData = await geoRes.json()
           const city = geoData.address?.city || geoData.address?.town || geoData.address?.village || 'Unknown'
 
-          // Fetch weather from Node backend
-          const weatherRes = await fetch(`http://localhost:3000/weather?city=${encodeURIComponent(city)}`)
+          // Fetch weather + AQI from FastAPI backend
+          const weatherRes = await fetch(
+            `/api/weather/current?lat=${latitude}&lon=${longitude}`
+          )
           const data = await weatherRes.json()
 
-          const tempF = Math.round(data.temp * 9 / 5 + 32)
-          const walk = getWalkScore(tempF, data.weather)
-          const aqi = getAqiLabel(42) // AQI requires a separate service; using placeholder
+          const tempF = Math.round(data.temperature)
+          const walk = getWalkScore(tempF, data.description)
+          const aqiInfo = getAqiLabel(data.aqi ?? 0)
 
           setWeather({
-            location: data.city,
+            location: city,
             temp: tempF,
-            condition: data.weather,
-            icon: data.weather?.toLowerCase().includes('cloud') ? '⛅'
-              : data.weather?.toLowerCase().includes('rain') ? '🌧️'
-              : data.weather?.toLowerCase().includes('snow') ? '❄️'
-              : data.weather?.toLowerCase().includes('thunder') ? '⛈️'
+            condition: data.description,
+            icon: data.description?.toLowerCase().includes('cloud') ? '⛅'
+              : data.description?.toLowerCase().includes('rain') ? '🌧️'
+              : data.description?.toLowerCase().includes('snow') ? '❄️'
+              : data.description?.toLowerCase().includes('thunder') ? '⛈️'
               : '☀️',
-            humidity: '--',
-            wind: '--',
-            aqi: 42,
-            aqiLabel: aqi.label,
-            aqiColor: aqi.color,
+            humidity: data.humidity != null ? `${data.humidity}%` : '--',
+            wind: data.wind_speed != null ? `${Math.round(data.wind_speed)} mph` : '--',
+            aqi: data.aqi ?? '--',
+            aqiLabel: aqiInfo.label,
+            aqiColor: aqiInfo.color,
             walkScore: walk.score,
             walkLabel: walk.label,
           })
