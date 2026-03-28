@@ -9,37 +9,19 @@ export default function Hero() {
       <div className="absolute top-40 right-12 w-14 h-14 rounded-full bg-paw-pink-mid opacity-60" />
       <div className="absolute bottom-32 right-8 w-8 h-8 rounded-full bg-paw-red opacity-25" />
 
-      <div className="max-w-7xl mx-auto px-6 grid md:grid-cols-2 gap-12 items-center w-full py-16">
-        {/* Left: Text */}
-        <div>
+      <div className="max-w-7xl mx-auto px-6 w-full py-16 grid grid-cols-3 gap-8 items-center">
+
+        {/* Left: Bold heading */}
+        <div className="text-left">
           <p className="text-sm font-semibold uppercase tracking-widest text-paw-blue mb-4">
             Smart walks for happy dogs
           </p>
-          <h1 className="font-display text-7xl md:text-8xl lg:text-9xl leading-none tracking-tight text-gray-900 uppercase mb-6">
-            A tired dog is<br />
-            <span className="text-paw-red">a happy dog!</span>
+          <h1 className="font-display text-6xl md:text-7xl lg:text-8xl leading-none tracking-tight text-gray-900 uppercase">
+            Your Paw<br />
+            <span className="text-paw-red">Your Path!</span>
           </h1>
-          <p className="text-lg text-gray-600 max-w-md mb-10 leading-relaxed">
-            Upload a photo of your dog. We'll detect their breed, recommend the perfect walk duration,
-            and find the best route based on today's weather and air quality.
-          </p>
-          <div className="flex flex-wrap gap-4">
-            <Link
-              to="/planner"
-              className="bg-paw-red text-white font-semibold uppercase tracking-wide px-8 py-4 rounded-pill hover:bg-red-700 transition-all hover:scale-105 text-sm"
-            >
-              Plan My Walk
-            </Link>
-            <a
-              href="#how-it-works"
-              className="border-2 border-gray-800 text-gray-800 font-semibold uppercase tracking-wide px-8 py-4 rounded-pill hover:bg-gray-800 hover:text-white transition-all text-sm"
-            >
-              How It Works
-            </a>
-          </div>
-
           {/* Stats */}
-          <div className="flex gap-10 mt-14">
+          <div className="flex flex-col gap-4 mt-10">
             <div>
               <p className="font-display text-4xl text-paw-red">150+</p>
               <p className="text-sm text-gray-500 uppercase tracking-wide">Breeds supported</p>
@@ -55,32 +37,51 @@ export default function Hero() {
           </div>
         </div>
 
-        {/* Right: Hero image placeholder */}
+        {/* Center: Big dog image */}
         <div className="relative flex justify-center">
-          <div className="relative w-80 h-80 md:w-[420px] md:h-[420px]">
-            {/* Circular background blob */}
+          <div className="relative w-[340px] h-[340px] md:w-[500px] md:h-[500px]">
             <div className="absolute inset-0 rounded-full bg-paw-pink opacity-70" />
-            {/* Dog emoji placeholder - replace with real image */}
             <div className="absolute inset-0 flex items-center justify-center">
-              <span className="text-[180px] md:text-[220px] select-none">🐕</span>
+              <img src="/hero-dog.png" alt="Dog" className="w-full h-full object-cover rounded-full" />
             </div>
           </div>
+          {/* Floating breed badge */}
+          <div className="absolute bottom-8 -left-4 bg-paw-red text-white rounded-2xl shadow-lg px-4 py-3">
+            <p className="text-xs uppercase tracking-wide opacity-80">Detected breed</p>
+            <p className="text-sm font-bold">Golden Retriever</p>
+          </div>
+        </div>
 
-          {/* Floating badge */}
-          <div className="absolute top-4 right-0 bg-white rounded-2xl shadow-lg px-4 py-3 flex items-center gap-3">
+        {/* Right: Description + buttons */}
+        <div className="text-left">
+          {/* Floating weather badge */}
+          <div className="inline-flex items-center gap-3 bg-white rounded-2xl shadow-lg px-4 py-3 mb-8">
             <span className="text-2xl">🌤️</span>
             <div>
               <p className="text-xs text-gray-400 uppercase tracking-wide">Today's condition</p>
               <p className="text-sm font-bold text-gray-800">Great for a walk!</p>
             </div>
           </div>
-
-          {/* Floating breed badge */}
-          <div className="absolute bottom-8 left-0 bg-paw-red text-white rounded-2xl shadow-lg px-4 py-3">
-            <p className="text-xs uppercase tracking-wide opacity-80">Detected breed</p>
-            <p className="text-sm font-bold">Golden Retriever</p>
+          <p className="text-lg text-gray-600 mb-10 leading-relaxed">
+            Upload a photo of your dog. We'll detect their breed, recommend the perfect walk duration,
+            and find the best route based on today's weather and air quality.
+          </p>
+          <div className="flex flex-col gap-4">
+            <Link
+              to="/planner"
+              className="bg-paw-red text-white font-semibold uppercase tracking-wide px-8 py-4 rounded-pill hover:bg-red-700 transition-all hover:scale-105 text-sm text-center"
+            >
+              Plan My Walk
+            </Link>
+            <a
+              href="#how-it-works"
+              className="border-2 border-gray-800 text-gray-800 font-semibold uppercase tracking-wide px-8 py-4 rounded-pill hover:bg-gray-800 hover:text-white transition-all text-sm text-center"
+            >
+              How It Works
+            </a>
           </div>
         </div>
+
       </div>
 
       {/* Bottom scroll indicator */}
