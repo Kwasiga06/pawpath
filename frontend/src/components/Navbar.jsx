@@ -1,9 +1,17 @@
 import { useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
+import { supabase } from '../lib/supabaseClient'
 
 export default function Navbar() {
   const [open, setOpen] = useState(false)
   const { pathname } = useLocation()
+
+  async function handleSignUp() {
+    await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: { redirectTo: window.location.origin },
+    })
+  }
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-paw-cream/90 backdrop-blur-sm border-b border-paw-pink">
@@ -31,12 +39,12 @@ export default function Navbar() {
           >
             Plan My Walk
           </Link>
-          <Link
-            to="/signup"
+          <button
+            onClick={handleSignUp}
             className="border-2 border-gray-800 text-gray-800 text-sm font-semibold uppercase tracking-wide px-6 py-2 rounded-pill hover:bg-gray-800 hover:text-white transition-colors"
           >
             Sign Up
-          </Link>
+          </button>
         </div>
 
         {/* Mobile hamburger */}
@@ -56,9 +64,9 @@ export default function Navbar() {
           <Link to="/planner" className="bg-paw-red text-white text-sm font-semibold uppercase tracking-wide px-6 py-2 rounded-pill text-center" onClick={() => setOpen(false)}>
             Plan My Walk
           </Link>
-          <Link to="/signup" className="border-2 border-gray-800 text-gray-800 text-sm font-semibold uppercase tracking-wide px-6 py-2 rounded-pill text-center" onClick={() => setOpen(false)}>
+          <button onClick={() => { setOpen(false); handleSignUp() }} className="border-2 border-gray-800 text-gray-800 text-sm font-semibold uppercase tracking-wide px-6 py-2 rounded-pill text-center">
             Sign Up
-          </Link>
+          </button>
         </div>
       )}
     </nav>
