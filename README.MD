@@ -11,3 +11,5 @@ Vet Record Upload — Upload and store vaccination records, checkup notes, and m
 Smart Walk Planning — Google Maps API generates walking routes tailored to your dog's exercise needs, breed characteristics, and location.
 Weather-Aware Scheduling — Real-time weather and air quality data recommends optimal walk times, flagging extreme heat, cold, or poor conditions for your specific breed.
 Breed-Specific Guidance — Adjusts exercise and care recommendations based on breed traits (e.g., shorter walks in heat for brachycephalic breeds, longer routes for high-energy breeds).
+
+pip install fastapi uvicorn python-dotenv google-generativeai requests python-multipart
