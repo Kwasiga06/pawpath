@@ -3,11 +3,8 @@ import Navbar from './components/Navbar'
 import Home from './pages/Home'
 import Planner from './pages/Planner'
 import Account from './components/Account'
-<<<<<<< HEAD
 import Dog from './pages/Dog'
-=======
 import Onboard from './pages/Onboard'
->>>>>>> 3d6ed0c (Add onboarding flow, fix navbar, wire APIs, add CORS to node backend)
 
 export default function App() {
   return (
