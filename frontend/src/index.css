@@ -1,0 +1,18 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+  body {
+    @apply bg-paw-cream font-body text-gray-800;
+  }
+}
+
+@layer utilities {
+  .font-display {
+    font-family: 'Bayon', sans-serif;
+  }
+}
