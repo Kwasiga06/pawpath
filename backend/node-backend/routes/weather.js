@@ -3,7 +3,7 @@ const router = express.Router();
 const axios = require('axios');
 
 router.get('/', async (req, res) => {
-    const city = req.query.city || 'New York'; // Default to New York if no city is provided
+    const city = req.query.city || 'New York'; 
 
     if(!city) {
         return res.status(400).json({ error: 'City parameter is required' });
