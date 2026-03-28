@@ -21,15 +21,16 @@ function Account() {
       if (pending) {
         try {
           const dog = JSON.parse(pending)
-          await supabase.from('dogs').insert({
+          const { error } = await supabase.from('dogs').insert({
             owner_id: u.id,
             name: dog.name || null,
             breed: dog.breed || null,
             size: dog.size || null,
             weight: dog.weight || null,
-            age_y: parseFloat(dog.age) || null,
+            age: dog.age || null,
           })
-        } catch {}
+          if (error) console.error('Dog insert error:', error)
+        } catch (e) { console.error('Dog insert exception:', e) }
         localStorage.removeItem('pending_dog')
       }
 
@@ -107,15 +108,8 @@ function Account() {
                     <h3 className="font-display text-xl uppercase tracking-tight text-gray-900">{dog.name}</h3>
                     {dog.breed && <p className="text-sm text-gray-500">{dog.breed}</p>}
                     <div className="flex gap-3 mt-1">
-                      {(dog.age_y != null || dog.age_m != null) && (
-                        <span className="text-xs text-gray-400">
-                          {dog.age_y > 0 && `${dog.age_y} yr${dog.age_y !== 1 ? 's' : ''}`}
-                          {dog.age_y > 0 && dog.age_m > 0 && ' '}
-                          {dog.age_m > 0 && `${dog.age_m} mo`}
-                          {dog.age_y === 0 && !dog.age_m && '< 1 mo'}
-                        </span>
-                      )}
-                      {dog.weight != null && <span className="text-xs text-gray-400">{dog.weight} kg</span>}
+                      {dog.age && <span className="text-xs text-gray-400">{dog.age}</span>}
+                      {dog.weight && <span className="text-xs text-gray-400">{dog.weight}</span>}
                     </div>
                   </div>
                 </div>

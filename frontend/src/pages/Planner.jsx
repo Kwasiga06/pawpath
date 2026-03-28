@@ -9,12 +9,14 @@ import WeatherBar from '../components/planner/WeatherBar'
 export default function Planner() {
   const [breed, setBreed] = useState(null)
   const [analyzing, setAnalyzing] = useState(false)
+  const [userId, setUserId] = useState(null)
   const resultsRef = useRef(null)
   const navigate = useNavigate()
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
-      if (!session) navigate('/')
+      if (!session) { navigate('/'); return }
+      setUserId(session.user.id)
     })
   }, [])
 
@@ -22,9 +24,19 @@ export default function Planner() {
     setAnalyzing(true)
   }
 
-  function handleBreedDetected(detectedBreed) {
+  async function handleBreedDetected(result) {
+    const detectedBreed = result?.breed ?? null
     setBreed(detectedBreed)
     setAnalyzing(false)
+
+    if (detectedBreed && userId) {
+      await supabase.from('dogs').insert({
+        owner_id: userId,
+        breed: detectedBreed,
+        size: result.size_category ?? null,
+      })
+    }
+
     setTimeout(() => {
       resultsRef.current?.scrollIntoView({ behavior: 'smooth' })
     }, 100)

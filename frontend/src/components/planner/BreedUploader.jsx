@@ -22,7 +22,7 @@ export default function BreedUploader({ onBreedDetected, onAnalysisStart, analyz
       })
       if (!res.ok) throw new Error('Detection failed')
       const data = await res.json()
-      onBreedDetected(data.breed)
+      onBreedDetected(data)
     } catch (err) {
       setError('Could not detect breed. Please try again.')
       onBreedDetected(null)

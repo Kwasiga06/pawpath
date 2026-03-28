@@ -21,15 +21,7 @@ export default function Dog() {
 
   if (dog === undefined) return null
 
-  const ageLabel = (() => {
-    const y = dog.age_y ?? 0
-    const m = dog.age_m ?? 0
-    if (y === 0 && m === 0) return null
-    const parts = []
-    if (y > 0) parts.push(`${y} yr${y !== 1 ? 's' : ''}`)
-    if (m > 0) parts.push(`${m} mo`)
-    return parts.join(' ')
-  })()
+  const ageLabel = dog.age || null
 
   return (
     <div className="min-h-screen bg-paw-cream pt-16">
