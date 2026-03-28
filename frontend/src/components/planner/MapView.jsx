@@ -2,7 +2,7 @@
 // The map generates a walking route centered on a default location
 // In production, use the user's geolocation and Google Maps Directions API
 
-const GOOGLE_MAPS_API_KEY = 'YOUR_API_KEY' // <-- Replace with your key
+const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY ?? ''
 
 // Mock waypoints for a dog-friendly walking loop (LA example)
 // Replace with dynamically generated waypoints from Google Maps Directions API

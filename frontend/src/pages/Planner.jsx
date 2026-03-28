@@ -18,16 +18,16 @@ export default function Planner() {
     })
   }, [])
 
-  function handleBreedDetected(detectedBreed) {
+  function handleAnalysisStart() {
     setAnalyzing(true)
-    // Simulate AI detection delay
+  }
+
+  function handleBreedDetected(detectedBreed) {
+    setBreed(detectedBreed)
+    setAnalyzing(false)
     setTimeout(() => {
-      setBreed(detectedBreed)
-      setAnalyzing(false)
-      setTimeout(() => {
-        resultsRef.current?.scrollIntoView({ behavior: 'smooth' })
-      }, 100)
-    }, 2000)
+      resultsRef.current?.scrollIntoView({ behavior: 'smooth' })
+    }, 100)
   }
 
   return (
@@ -48,7 +48,7 @@ export default function Planner() {
         <WeatherBar />
 
         {/* Upload section */}
-        <BreedUploader onBreedDetected={handleBreedDetected} analyzing={analyzing} />
+        <BreedUploader onBreedDetected={handleBreedDetected} onAnalysisStart={handleAnalysisStart} analyzing={analyzing} />
 
         {/* Results */}
         {(analyzing || breed) && (

@@ -1,36 +1,32 @@
 import { useState, useRef } from 'react'
 
-// Mock breed database - replace with real AI API call
-const MOCK_BREEDS = [
-  'Golden Retriever',
-  'Labrador Retriever',
-  'German Shepherd',
-  'French Bulldog',
-  'Bulldog',
-  'Poodle',
-  'Beagle',
-  'Rottweiler',
-  'Yorkshire Terrier',
-  'Dachshund',
-  'Siberian Husky',
-  'Shih Tzu',
-  'Border Collie',
-  'Chihuahua',
-  'Australian Shepherd',
-]
-
-export default function BreedUploader({ onBreedDetected, analyzing }) {
+export default function BreedUploader({ onBreedDetected, onAnalysisStart, analyzing }) {
   const [preview, setPreview] = useState(null)
   const [dragging, setDragging] = useState(false)
+  const [error, setError] = useState(null)
   const inputRef = useRef(null)
 
-  function handleFile(file) {
+  async function handleFile(file) {
     if (!file || !file.type.startsWith('image/')) return
     const url = URL.createObjectURL(file)
     setPreview(url)
-    // Pick a random mock breed (replace with real API)
-    const randomBreed = MOCK_BREEDS[Math.floor(Math.random() * MOCK_BREEDS.length)]
-    onBreedDetected(randomBreed)
+    setError(null)
+    onAnalysisStart()
+
+    try {
+      const formData = new FormData()
+      formData.append('file1', file)
+      const res = await fetch('http://localhost:8000/api/identify', {
+        method: 'POST',
+        body: formData,
+      })
+      if (!res.ok) throw new Error('Detection failed')
+      const data = await res.json()
+      onBreedDetected(data.breed)
+    } catch (err) {
+      setError('Could not detect breed. Please try again.')
+      onBreedDetected(null)
+    }
   }
 
   function handleDrop(e) {
@@ -94,6 +90,10 @@ export default function BreedUploader({ onBreedDetected, analyzing }) {
         className="hidden"
         onChange={handleChange}
       />
+
+      {error && (
+        <p className="mt-3 text-sm text-paw-red font-semibold text-center">{error}</p>
+      )}
 
       {!preview && (
         <button

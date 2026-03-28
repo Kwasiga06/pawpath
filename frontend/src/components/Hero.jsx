@@ -1,18 +1,32 @@
 import { Link } from 'react-router-dom'
 
+function PawIcon({ className, style }) {
+  return (
+    <svg viewBox="0 0 100 100" className={className} style={style} fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+      {/* Toe pads */}
+      <ellipse cx="27" cy="30" rx="10" ry="13" />
+      <ellipse cx="47" cy="20" rx="10" ry="13" />
+      <ellipse cx="67" cy="20" rx="10" ry="13" />
+      <ellipse cx="83" cy="32" rx="9" ry="12" />
+      {/* Main pad with arched bottom */}
+      <path d="M 54 40 C 78 40, 80 70, 65 80 C 62 88, 58 88, 54 68 C 50 88, 46 88, 39 80 C 24 70, 28 40, 54 40 Z" />
+    </svg>
+  )
+}
+
 export default function Hero() {
   return (
     <section className="relative min-h-screen bg-paw-cream overflow-hidden flex items-center pt-16">
-      {/* Decorative circles */}
-      <div className="absolute top-24 left-8 w-20 h-20 rounded-full bg-paw-red opacity-20" />
-      <div className="absolute bottom-24 left-16 w-10 h-10 rounded-full bg-paw-blue opacity-30" />
-      <div className="absolute top-40 right-12 w-14 h-14 rounded-full bg-paw-pink-mid opacity-60" />
-      <div className="absolute bottom-32 right-8 w-8 h-8 rounded-full bg-paw-red opacity-25" />
+      {/* Decorative paws */}
+      <PawIcon className="absolute w-20 h-20 text-paw-red opacity-20" style={{ top: '25rem', left: '2rem' }} />
+      <PawIcon className="absolute w-10 h-10 text-paw-blue opacity-30" style={{ bottom: '6rem', left: '4rem' }} />
+      <PawIcon className="absolute w-14 h-14 text-paw-pink-mid opacity-60" style={{ top: '10rem', right: '3rem' }} />
+      <PawIcon className="absolute w-8 h-8 text-paw-red opacity-25" style={{ bottom: '8rem', right: '2rem' }} />
 
       <div className="max-w-7xl mx-auto px-6 w-full py-16 grid grid-cols-[1fr_2fr_1fr] gap-4 items-center">
 
         {/* Left: heading */}
-        <h1 className="font-display text-6xl md:text-7xl lg:text-8xl leading-none tracking-tight text-gray-900 uppercase text-left">
+        <h1 className="font-display text-6xl md:text-7xl lg:text-8xl leading-none tracking-tight text-gray-900 uppercase text-left self-start pt-8">
           Find<br />Your<br />Path
         </h1>
 
