@@ -1,4 +1,3 @@
-import { Link } from 'react-router-dom'
 
 function PawIcon({ className, style }) {
   return (
@@ -50,12 +49,6 @@ export default function Hero() {
             and find the best route based on today's weather and air quality.
           </p>
           <div className="flex flex-col gap-3">
-            <Link
-              to="/planner"
-              className="bg-paw-red text-white font-semibold uppercase tracking-wide px-6 py-3 rounded-pill hover:bg-red-700 transition-all hover:scale-105 text-sm text-center"
-            >
-              Plan My Walk
-            </Link>
             <a
               href="#how-it-works"
               className="border-2 border-gray-800 text-gray-800 font-semibold uppercase tracking-wide px-6 py-3 rounded-pill hover:bg-gray-800 hover:text-white transition-all text-sm text-center"

@@ -51,21 +51,6 @@ export default function Navbar() {
             Features
           </a>
           {user ? (
-            <Link
-              to="/planner"
-              className="bg-paw-red text-white text-sm font-semibold uppercase tracking-wide px-6 py-2 rounded-pill hover:bg-red-700 transition-colors"
-            >
-              Plan My Walk
-            </Link>
-          ) : (
-            <button
-              onClick={handleSignUp}
-              className="bg-paw-red text-white text-sm font-semibold uppercase tracking-wide px-6 py-2 rounded-pill hover:bg-red-700 transition-colors"
-            >
-              Plan My Walk
-            </button>
-          )}
-          {user ? (
             <>
               <Link
                 to="/account"
@@ -104,15 +89,6 @@ export default function Navbar() {
           <Link to="/" className="text-sm font-semibold uppercase tracking-wide text-gray-700" onClick={() => setOpen(false)}>Home</Link>
           <a href="/#how-it-works" className="text-sm font-semibold uppercase tracking-wide text-gray-700" onClick={() => setOpen(false)}>How It Works</a>
           <a href="/#features" className="text-sm font-semibold uppercase tracking-wide text-gray-700" onClick={() => setOpen(false)}>Features</a>
-          {user ? (
-            <Link to="/planner" className="bg-paw-red text-white text-sm font-semibold uppercase tracking-wide px-6 py-2 rounded-pill text-center" onClick={() => setOpen(false)}>
-              Plan My Walk
-            </Link>
-          ) : (
-            <button onClick={() => { setOpen(false); handleSignUp() }} className="bg-paw-red text-white text-sm font-semibold uppercase tracking-wide px-6 py-2 rounded-pill text-center w-full">
-              Plan My Walk
-            </button>
-          )}
           {user ? (
             <>
               <Link to="/account" className="border-2 border-gray-800 text-gray-800 text-sm font-semibold uppercase tracking-wide px-6 py-2 rounded-pill text-center" onClick={() => setOpen(false)}>
