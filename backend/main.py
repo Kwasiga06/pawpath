@@ -1,14 +1,14 @@
-from fastapi import FastAPI
 from dotenv import load_dotenv
 
-from routes.gemini import router as gemini_router
-
 load_dotenv()
+
+from fastapi import FastAPI
+from routes.gemini import router as gemini_router
 
 
 app = FastAPI(title="PawPath API")
 
-app.include_router(gemini_router, prefix="/gemini")
+app.include_router(gemini_router, prefix="/api")
 
 
 @app.get("/")
