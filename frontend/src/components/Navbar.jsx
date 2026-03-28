@@ -10,7 +10,7 @@ export default function Navbar() {
       <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
         {/* Logo */}
         <Link to="/" className="flex items-center gap-2">
-          <span className="text-2xl">🐾</span>
+          <img src="/dog-logo.png" alt="PawPath logo" className="h-8 w-8 object-contain" />
           <span className="font-display text-2xl tracking-tight text-paw-red">PAWPATH</span>
         </Link>
 
@@ -31,6 +31,12 @@ export default function Navbar() {
           >
             Plan My Walk
           </Link>
+          <Link
+            to="/signup"
+            className="border-2 border-gray-800 text-gray-800 text-sm font-semibold uppercase tracking-wide px-6 py-2 rounded-pill hover:bg-gray-800 hover:text-white transition-colors"
+          >
+            Sign Up
+          </Link>
         </div>
 
         {/* Mobile hamburger */}
@@ -49,6 +55,9 @@ export default function Navbar() {
           <a href="/#features" className="text-sm font-semibold uppercase tracking-wide text-gray-700" onClick={() => setOpen(false)}>Features</a>
           <Link to="/planner" className="bg-paw-red text-white text-sm font-semibold uppercase tracking-wide px-6 py-2 rounded-pill text-center" onClick={() => setOpen(false)}>
             Plan My Walk
+          </Link>
+          <Link to="/signup" className="border-2 border-gray-800 text-gray-800 text-sm font-semibold uppercase tracking-wide px-6 py-2 rounded-pill text-center" onClick={() => setOpen(false)}>
+            Sign Up
           </Link>
         </div>
       )}
