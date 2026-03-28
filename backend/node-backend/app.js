@@ -9,6 +9,8 @@ const uploadRouter = require('./routes/upload');
 const appointmentsRouter = require('./routes/appointments');
 const weatherRouter = require('./routes/weather');
 
+
+app.use(cors());
 app.use(express.json());
 app.use('/dogs', dogsRouter);
 app.use('/upload', uploadRouter);
