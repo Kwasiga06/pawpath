@@ -16,7 +16,7 @@ router.post('/', (req, res) => {
 router.get('/:id', (req, res) => {
     const appointmentId = req.params.id;
     res.json({ message: `Get appointment with ID ${appointmentId}` });
-});
+}); 
 
 // Update an appointment by ID
 router.put('/:id', (req, res) => {
