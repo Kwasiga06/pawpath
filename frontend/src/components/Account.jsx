@@ -77,7 +77,7 @@ function Account() {
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {dogs.map((dog) => (
-                <div key={dog.id} className="bg-white rounded-3xl p-6 flex items-center gap-5">
+                <div key={dog.id} onClick={() => navigate(`/dog/${dog.id}`)} className="bg-white rounded-3xl p-6 flex items-center gap-5 cursor-pointer hover:shadow-md transition-shadow">
                   {dog.image ? (
                     <img src={dog.image} alt={dog.name} className="w-16 h-16 rounded-full object-cover flex-shrink-0" />
                   ) : (
@@ -130,17 +130,6 @@ function Account() {
               </div>
               <button className="text-xs font-semibold uppercase tracking-wide text-paw-blue hover:text-paw-red transition-colors">
                 Change
-              </button>
-            </div>
-
-            {/* Notifications row */}
-            <div className="flex items-center justify-between px-8 py-5">
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-widest text-gray-400 mb-0.5">Walk reminders</p>
-                <p className="text-sm text-gray-800">Off</p>
-              </div>
-              <button className="text-xs font-semibold uppercase tracking-wide text-paw-blue hover:text-paw-red transition-colors">
-                Enable
               </button>
             </div>
 
