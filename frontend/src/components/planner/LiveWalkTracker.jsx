@@ -1,22 +1,23 @@
-import { useState, useEffect, useRef } from 'react'
-import { MapContainer, TileLayer, Polyline, Marker, useMap } from 'react-leaflet'
-import L from 'leaflet'
-import 'leaflet/dist/leaflet.css'
+import { useState, useEffect, useRef, useCallback } from 'react'
+import { GoogleMap, useJsApiLoader, Polyline, Marker } from '@react-google-maps/api'
 import { supabase } from '../../lib/supabaseClient'
 
-// Fix Vite + Leaflet default marker icons
-import iconUrl from 'leaflet/dist/images/marker-icon.png'
-import iconRetinaUrl from 'leaflet/dist/images/marker-icon-2x.png'
-import shadowUrl from 'leaflet/dist/images/marker-shadow.png'
-delete L.Icon.Default.prototype._getIconUrl
-L.Icon.Default.mergeOptions({ iconUrl, iconRetinaUrl, shadowUrl })
+const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY ?? ''
 
-const currentDotIcon = L.divIcon({
-  className: '',
-  html: '<div style="width:18px;height:18px;background:#e53e3e;border-radius:50%;border:3px solid white;box-shadow:0 2px 8px rgba(0,0,0,0.4)"></div>',
-  iconSize: [18, 18],
-  iconAnchor: [9, 9],
-})
+// Minimal dark map style
+const MAP_STYLES = [
+  { elementType: 'geometry', stylers: [{ color: '#1e2433' }] },
+  { elementType: 'labels.text.fill', stylers: [{ color: '#8b97b0' }] },
+  { elementType: 'labels.text.stroke', stylers: [{ color: '#1e2433' }] },
+  { featureType: 'road', elementType: 'geometry', stylers: [{ color: '#2d3748' }] },
+  { featureType: 'road', elementType: 'geometry.stroke', stylers: [{ color: '#1a202c' }] },
+  { featureType: 'road.highway', elementType: 'geometry', stylers: [{ color: '#3d4a63' }] },
+  { featureType: 'road', elementType: 'labels.text.fill', stylers: [{ color: '#9ca3af' }] },
+  { featureType: 'water', elementType: 'geometry', stylers: [{ color: '#111827' }] },
+  { featureType: 'poi.park', elementType: 'geometry', stylers: [{ color: '#1a2e1e' }] },
+  { featureType: 'poi', elementType: 'labels', stylers: [{ visibility: 'off' }] },
+  { featureType: 'transit', stylers: [{ visibility: 'off' }] },
+]
 
 function haversineMeters(a, b) {
   const R = 6371000
@@ -40,14 +41,6 @@ function formatTime(totalSeconds) {
   return `${m}:${String(s).padStart(2, '0')}`
 }
 
-function MapFollow({ center }) {
-  const map = useMap()
-  useEffect(() => {
-    if (center) map.setView(center, map.getZoom())
-  }, [center])
-  return null
-}
-
 export default function LiveWalkTracker({ dog, parkName, onClose }) {
   const [status, setStatus] = useState('idle') // idle | active | paused | ended
   const [points, setPoints] = useState([])
@@ -56,10 +49,24 @@ export default function LiveWalkTracker({ dog, parkName, onClose }) {
   const [currentPos, setCurrentPos] = useState(null)
   const [saving, setSaving] = useState(false)
 
+  const mapRef = useRef(null)
   const watchIdRef = useRef(null)
   const timerRef = useRef(null)
   const startTimeRef = useRef(null)
   const pausedSecondsRef = useRef(0)
+
+  const { isLoaded } = useJsApiLoader({ googleMapsApiKey: GOOGLE_MAPS_API_KEY })
+
+  const onMapLoad = useCallback((map) => {
+    mapRef.current = map
+  }, [])
+
+  // Keep map centered on current position
+  useEffect(() => {
+    if (mapRef.current && currentPos) {
+      mapRef.current.panTo(currentPos)
+    }
+  }, [currentPos])
 
   function startTracking() {
     setStatus('active')
@@ -100,9 +107,7 @@ export default function LiveWalkTracker({ dog, parkName, onClose }) {
     setStatus('ended')
     setSaving(true)
 
-    const {
-      data: { session },
-    } = await supabase.auth.getSession()
+    const { data: { session } } = await supabase.auth.getSession()
     if (session) {
       await supabase.from('walks').insert({
         owner_id: session.user.id,
@@ -133,7 +138,17 @@ export default function LiveWalkTracker({ dog, parkName, onClose }) {
     ? `${Math.floor(paceMinutes)}:${String(Math.floor((paceMinutes % 1) * 60)).padStart(2, '0')}`
     : '--:--'
 
-  const mapCenter = currentPos ?? points[0] ?? null
+  // Custom red dot icon (defined after Maps API is loaded)
+  const currentDotIcon = isLoaded
+    ? {
+        path: window.google.maps.SymbolPath.CIRCLE,
+        fillColor: '#e53e3e',
+        fillOpacity: 1,
+        strokeColor: '#ffffff',
+        strokeWeight: 3,
+        scale: 10,
+      }
+    : null
 
   return (
     <div className="fixed inset-0 z-50 bg-gray-950 flex flex-col">
@@ -141,11 +156,7 @@ export default function LiveWalkTracker({ dog, parkName, onClose }) {
       <div className="bg-gray-900 px-5 py-3 flex items-center justify-between shrink-0">
         <div className="flex items-center gap-3">
           {dog.image ? (
-            <img
-              src={dog.image}
-              className="w-9 h-9 rounded-full object-cover"
-              alt={dog.name}
-            />
+            <img src={dog.image} className="w-9 h-9 rounded-full object-cover" alt={dog.name} />
           ) : (
             <div className="w-9 h-9 rounded-full bg-paw-pink flex items-center justify-center text-base">
               🐾
@@ -168,54 +179,50 @@ export default function LiveWalkTracker({ dog, parkName, onClose }) {
 
       {/* Map */}
       <div className="flex-1 relative min-h-0">
-        {mapCenter ? (
-          <MapContainer
-            center={[mapCenter.lat, mapCenter.lng]}
-            zoom={17}
-            style={{ height: '100%', width: '100%' }}
-            zoomControl={false}
-          >
-            <TileLayer
-              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-            />
-            {points.length > 1 && (
-              <Polyline
-                positions={points.map((p) => [p.lat, p.lng])}
-                color="#e53e3e"
-                weight={5}
-                opacity={0.9}
-              />
-            )}
-            {currentPos && (
-              <Marker
-                position={[currentPos.lat, currentPos.lng]}
-                icon={currentDotIcon}
-              />
-            )}
-            <MapFollow
-              center={
-                currentPos ? [currentPos.lat, currentPos.lng] : null
-              }
-            />
-          </MapContainer>
-        ) : (
+        {!isLoaded ? (
           <div className="h-full flex items-center justify-center text-gray-500">
             <div className="text-center space-y-3">
-              <div className="text-5xl">📍</div>
-              <p className="text-sm">Waiting for GPS...</p>
+              <div className="w-8 h-8 border-2 border-paw-red border-t-transparent rounded-full animate-spin mx-auto" />
+              <p className="text-sm">Loading map...</p>
             </div>
           </div>
+        ) : (
+          <GoogleMap
+            mapContainerStyle={{ height: '100%', width: '100%' }}
+            center={currentPos ?? { lat: 37.7749, lng: -122.4194 }}
+            zoom={17}
+            onLoad={onMapLoad}
+            options={{
+              styles: MAP_STYLES,
+              disableDefaultUI: true,
+              zoomControl: false,
+              gestureHandling: 'greedy',
+            }}
+          >
+            {points.length > 1 && (
+              <Polyline
+                path={points}
+                options={{
+                  strokeColor: '#e53e3e',
+                  strokeOpacity: 0.95,
+                  strokeWeight: 6,
+                }}
+              />
+            )}
+            {currentPos && currentDotIcon && (
+              <Marker position={currentPos} icon={currentDotIcon} />
+            )}
+          </GoogleMap>
         )}
 
         {status === 'active' && (
-          <div className="absolute top-3 left-1/2 -translate-x-1/2 bg-paw-red text-white text-xs font-bold uppercase tracking-widest px-4 py-1.5 rounded-full shadow flex items-center gap-2 z-[1000] pointer-events-none">
+          <div className="absolute top-3 left-1/2 -translate-x-1/2 bg-paw-red text-white text-xs font-bold uppercase tracking-widest px-4 py-1.5 rounded-full shadow flex items-center gap-2 z-10 pointer-events-none">
             <span className="w-2 h-2 bg-white rounded-full animate-pulse" />
             Live
           </div>
         )}
         {status === 'paused' && (
-          <div className="absolute top-3 left-1/2 -translate-x-1/2 bg-gray-700 text-white text-xs font-bold uppercase tracking-widest px-4 py-1.5 rounded-full shadow z-[1000] pointer-events-none">
+          <div className="absolute top-3 left-1/2 -translate-x-1/2 bg-gray-700 text-white text-xs font-bold uppercase tracking-widest px-4 py-1.5 rounded-full shadow z-10 pointer-events-none">
             Paused
           </div>
         )}
@@ -291,9 +298,7 @@ export default function LiveWalkTracker({ dog, parkName, onClose }) {
             ) : (
               <>
                 <div className="bg-gray-800 rounded-2xl p-5 text-center">
-                  <p className="text-gray-400 text-xs uppercase tracking-widest mb-4">
-                    Walk Complete
-                  </p>
+                  <p className="text-gray-400 text-xs uppercase tracking-widest mb-4">Walk Complete</p>
                   <div className="grid grid-cols-2 gap-6">
                     <div>
                       <p className="text-white font-display text-3xl">{formatTime(elapsed)}</p>
