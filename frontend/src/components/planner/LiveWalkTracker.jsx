@@ -164,7 +164,6 @@ export default function LiveWalkTracker({ dog, parkName, onClose }) {
           )}
           <div>
             <p className="text-white font-semibold text-sm leading-tight">{dog.name}</p>
-            <p className="text-gray-400 text-xs">{parkName ?? 'Live Walk'}</p>
           </div>
         </div>
         {status === 'idle' && (
