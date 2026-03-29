@@ -7,20 +7,23 @@ import Dog from './pages/Dog'
 import Onboard from './pages/Onboard'
 import Vets from './pages/Vets'
 import WalkHistory from './pages/WalkHistory'
+import { TransitionProvider } from './lib/TransitionContext'
 
 export default function App() {
   return (
-    <div className="min-h-screen">
-      <Navbar />
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/onboard" element={<Onboard />} />
-        <Route path="/planner" element={<Planner />} />
-        <Route path="/account" element={<Account />} />
-        <Route path="/dog/:id" element={<Dog />} />
-        <Route path="/vets" element={<Vets />} />
-        <Route path="/history" element={<WalkHistory />} />
-      </Routes>
-    </div>
+    <TransitionProvider>
+      <div className="min-h-screen">
+        <Navbar />
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/onboard" element={<Onboard />} />
+          <Route path="/planner" element={<Planner />} />
+          <Route path="/account" element={<Account />} />
+          <Route path="/dog/:id" element={<Dog />} />
+          <Route path="/vets" element={<Vets />} />
+          <Route path="/history" element={<WalkHistory />} />
+        </Routes>
+      </div>
+    </TransitionProvider>
   )
 }

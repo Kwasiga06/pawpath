@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabaseClient'
+import { useTransition } from '../lib/TransitionContext'
 
 function Account() {
   const [user, setUser] = useState(undefined)
   const [dogs, setDogs] = useState([])
   const navigate = useNavigate()
+  const { transitionTo } = useTransition()
 
   useEffect(() => {
     async function init(u) {
@@ -70,7 +72,7 @@ function Account() {
           )}
           <div>
             <p className="text-sm font-semibold uppercase tracking-widest text-paw-blue mb-1">Your account</p>
-            <h1 className="font-display text-5xl md:text-6xl uppercase tracking-tight text-gray-900">
+            <h1 className="font-display text-5xl md:text-6xl uppercase tracking-tight text-ink">
               {displayName}
             </h1>
           </div>
@@ -84,17 +86,17 @@ function Account() {
           <div className="flex items-center justify-between mb-6">
             <div>
               <p className="text-sm font-semibold uppercase tracking-widest text-paw-blue mb-1">Your pals</p>
-              <h2 className="font-display text-4xl uppercase tracking-tight text-gray-900">My Dogs</h2>
+              <h2 className="font-display text-4xl uppercase tracking-tight text-ink">My Dogs</h2>
             </div>
             <div className="flex items-center gap-3">
               <button
-                onClick={() => navigate('/onboard')}
+                onClick={() => transitionTo('/onboard', 'bg-paw-red')}
                 className="border border-paw-red text-paw-red text-sm font-semibold uppercase tracking-wide px-6 py-2 rounded-pill hover:bg-paw-red hover:text-white transition-colors"
               >
                 + Add Dog
               </button>
               <button
-                onClick={() => navigate('/planner')}
+                onClick={() => transitionTo('/planner', 'bg-paw-cream')}
                 className="bg-paw-red text-white text-sm font-semibold uppercase tracking-wide px-6 py-2 rounded-pill hover:bg-red-700 transition-colors"
               >
                 Plan My Walk
@@ -105,8 +107,8 @@ function Account() {
           {dogs.length === 0 ? (
             <div className="bg-white rounded-3xl p-10 flex flex-col items-center text-center">
               <span className="text-6xl mb-4">🐕</span>
-              <h3 className="font-display text-2xl uppercase tracking-tight text-gray-900 mb-2">No dogs yet</h3>
-              <p className="text-gray-500 text-sm leading-relaxed max-w-xs">
+              <h3 className="font-display text-2xl uppercase tracking-tight text-ink mb-2">No dogs yet</h3>
+              <p className="text-ink-mid text-sm leading-relaxed max-w-xs">
                 Add your dog to get personalized walk recommendations tailored to their breed and age.
               </p>
             </div>
@@ -122,11 +124,11 @@ function Account() {
                     </div>
                   )}
                   <div>
-                    <h3 className="font-display text-xl uppercase tracking-tight text-gray-900">{dog.name}</h3>
-                    {dog.breed && <p className="text-sm text-gray-500">{dog.breed}</p>}
+                    <h3 className="font-display text-xl uppercase tracking-tight text-ink">{dog.name}</h3>
+                    {dog.breed && <p className="text-sm text-ink-mid">{dog.breed}</p>}
                     <div className="flex gap-3 mt-1">
-                      {dog.age && <span className="text-xs text-gray-400">{dog.age}</span>}
-                      {dog.weight && <span className="text-xs text-gray-400">{dog.weight}</span>}
+                      {dog.age && <span className="text-xs text-ink-low">{dog.age}</span>}
+                      {dog.weight && <span className="text-xs text-ink-low">{dog.weight}</span>}
                     </div>
                   </div>
                 </div>
@@ -139,23 +141,23 @@ function Account() {
         <section>
           <div className="mb-6">
             <p className="text-sm font-semibold uppercase tracking-widest text-paw-blue mb-1">Preferences</p>
-            <h2 className="font-display text-4xl uppercase tracking-tight text-gray-900">Settings</h2>
+            <h2 className="font-display text-4xl uppercase tracking-tight text-ink">Settings</h2>
           </div>
 
           <div className="bg-white rounded-3xl divide-y divide-gray-100">
             {/* Email row */}
             <div className="flex items-center justify-between px-8 py-5">
               <div>
-                <p className="text-xs font-semibold uppercase tracking-widest text-gray-400 mb-0.5">Email</p>
-                <p className="text-sm text-gray-800">{user.email}</p>
+                <p className="text-xs font-semibold uppercase tracking-widest text-ink-low mb-0.5">Email</p>
+                <p className="text-sm text-ink-high">{user.email}</p>
               </div>
             </div> 
 
             {/* Sign out row */}
             <div className="flex items-center justify-between px-8 py-5">
               <div>
-                <p className="text-xs font-semibold uppercase tracking-widest text-gray-400 mb-0.5">Session</p>
-                <p className="text-sm text-gray-800">Signed in with Google</p>
+                <p className="text-xs font-semibold uppercase tracking-widest text-ink-low mb-0.5">Session</p>
+                <p className="text-sm text-ink-high">Signed in with Google</p>
               </div>
               <button
                 onClick={() => supabase.auth.signOut().then(() => navigate('/'))}

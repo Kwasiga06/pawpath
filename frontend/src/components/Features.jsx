@@ -1,39 +1,39 @@
 const features = [
   {
     icon: '🧬',
-    title: 'Breed Intelligence',
-    description: 'Every breed has unique exercise needs. A Husky needs far more activity than a Bulldog. We tailor every recommendation to your specific dog.',
+    title: 'AI Breed Detection',
+    description: 'Google Gemini Vision identifies your dog\'s breed from up to 3 photos — supports JPG, PNG, WEBP, and HEIC formats.',
     tag: 'AI Powered',
   },
   {
     icon: '⏱️',
-    title: 'Walk Duration',
-    description: 'Get exact walk time recommendations based on your dog\'s breed, size, and age — so you never under or over-exercise them.',
+    title: 'Walk Recommendations',
+    description: 'Duration, distance, intensity, and tips per breed — all adjusted for live weather and AQI so every walk is safe and right-sized.',
     tag: 'Personalized',
   },
   {
-    icon: '🌫️',
-    title: 'Air Quality Alerts',
-    description: 'High AQI days can be dangerous for dogs, especially brachycephalic breeds. We warn you before you step outside.',
+    icon: '🌤️',
+    title: 'Live Weather Bar',
+    description: 'Real-time temperature, humidity, wind, and Air Quality Index with a walk score from 0–100 so you know before you go.',
     tag: 'Live Data',
   },
   {
-    icon: '🌡️',
-    title: 'Weather Safety',
-    description: 'Too hot for paw pads? Too cold for short-haired breeds? We factor in real-time temperature, humidity, and UV index.',
-    tag: 'Real-time',
-  },
-  {
     icon: '📍',
-    title: 'Custom Routes',
-    description: 'Google Maps integration generates a route optimized for your walk duration — finding parks, avoiding traffic, and keeping it interesting.',
+    title: 'Walk Route Map',
+    description: 'Google Maps embed surfaces dog-friendly parks near your location so you always have somewhere great to walk.',
     tag: 'Google Maps',
   },
   {
+    icon: '🏥',
+    title: 'Vet Finder',
+    description: 'Search by address to find nearby veterinary clinics with ratings, open/closed hours, and a direct link to their website.',
+    tag: 'Google Places',
+  },
+  {
     icon: '🐾',
-    title: 'Breed Health Tips',
-    description: 'Get breed-specific health insights so you know the warning signs to watch for on your walk.',
-    tag: 'Education',
+    title: 'Dog Profiles',
+    description: 'Save your dogs with photos, breed, age, and weight. Manage multiple dogs from one account with Supabase-backed storage.',
+    tag: 'Profiles',
   },
 ]
 
@@ -43,7 +43,7 @@ export default function Features() {
       <div className="max-w-7xl mx-auto">
         <div className="mb-16">
           <p className="text-sm font-semibold uppercase tracking-widest text-paw-blue mb-3">Everything you need</p>
-          <h2 className="font-display text-6xl md:text-7xl uppercase tracking-tight text-gray-900">
+          <h2 className="font-display text-6xl md:text-7xl uppercase tracking-tight text-ink">
             Built for your <span className="text-paw-red">dog</span>
           </h2>
         </div>
@@ -60,10 +60,10 @@ export default function Features() {
                   {f.tag}
                 </span>
               </div>
-              <h3 className="font-display text-2xl uppercase tracking-tight text-gray-900 mb-2">
+              <h3 className="font-display text-2xl uppercase tracking-tight text-ink mb-2">
                 {f.title}
               </h3>
-              <p className="text-gray-500 text-sm leading-relaxed">{f.description}</p>
+              <p className="text-ink-mid text-sm leading-relaxed">{f.description}</p>
             </div>
           ))}
         </div>

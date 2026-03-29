@@ -17,6 +17,7 @@ export default function Planner() {
   const [routeError, setRouteError] = useState(null)
   const [originCoords, setOriginCoords] = useState(null)
   const [walkTrackerOpen, setWalkTrackerOpen] = useState(false)
+  const [weather, setWeather] = useState(null)
   const resultsRef = useRef(null)
   const navigate = useNavigate()
 
@@ -100,7 +101,7 @@ export default function Planner() {
 
       <div className="max-w-5xl mx-auto px-6 py-12 space-y-10">
         {/* Weather bar */}
-        <WeatherBar />
+        <WeatherBar onWeatherLoaded={setWeather} />
 
         {/* Dog selector */}
         <div className="bg-white rounded-3xl p-8">
@@ -169,7 +170,7 @@ export default function Planner() {
         )}
         {breed && (
           <div ref={resultsRef} className="space-y-6">
-            <WalkRecommendations breed={breed} routeData={routeData} routeLoading={routeLoading} routeError={routeError} />
+            <WalkRecommendations breed={breed} weather={weather} routeData={routeData} routeLoading={routeLoading} routeError={routeError} />
             <MapView routeData={routeData} routeLoading={routeLoading} breed={breed} originCoords={originCoords} />
 
             {/* Start Walk CTA */}

@@ -119,16 +119,16 @@ export default function Onboard() {
   }
 
   return (
-    <div className="min-h-screen bg-paw-cream flex items-center justify-center px-6 py-24">
-      <div className="w-full max-w-lg">
+    <div className="min-h-screen bg-paw-red flex items-center justify-center px-6 py-24">
+      <div className="w-full max-w-lg" style={{ animation: 'fadeSlideUp 0.6s ease-out forwards' }}>
 
         {/* Header */}
         <div className="text-center mb-10">
-          <p className="text-xs font-semibold uppercase tracking-widest text-paw-blue mb-2">Welcome to PawPath</p>
-          <h1 className="font-display text-5xl uppercase tracking-tight text-gray-900">
+          <p className="text-xs font-semibold uppercase tracking-widest text-paw-cream/70 mb-2">Welcome to PawPath</p>
+          <h1 className="font-display text-5xl uppercase tracking-tight text-white">
             {step === STEP_UPLOAD ? "Let's Meet Your Dog" : 'Confirm Your Dog'}
           </h1>
-          <p className="text-gray-500 mt-3 text-sm">
+          <p className="text-white/60 mt-3 text-sm">
             {step === STEP_UPLOAD
               ? "Upload a photo and we'll identify your dog's breed automatically."
               : 'Check the details below — edit anything that looks off.'}
@@ -137,9 +137,9 @@ export default function Onboard() {
 
         {/* Step indicator */}
         <div className="flex items-center gap-3 justify-center mb-8">
-          <div className="w-8 h-8 rounded-full bg-paw-red text-white flex items-center justify-center text-xs font-bold">1</div>
-          <div className={`h-0.5 w-12 transition-colors ${step === STEP_FORM ? 'bg-paw-red' : 'bg-gray-200'}`} />
-          <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-colors ${step === STEP_FORM ? 'bg-paw-red text-white' : 'bg-gray-200 text-gray-400'}`}>2</div>
+          <div className="w-8 h-8 rounded-full bg-paw-cream text-paw-red flex items-center justify-center text-xs font-bold">1</div>
+          <div className={`h-0.5 w-12 transition-colors ${step === STEP_FORM ? 'bg-paw-cream' : 'bg-white/20'}`} />
+          <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-colors ${step === STEP_FORM ? 'bg-paw-cream text-paw-red' : 'bg-white/20 text-white/50'}`}>2</div>
         </div>
 
         {/* Step 1: Upload */}
@@ -167,8 +167,8 @@ export default function Onboard() {
                   <div className="w-16 h-16 bg-paw-pink rounded-full flex items-center justify-center mb-4">
                     <span className="text-3xl">🐶</span>
                   </div>
-                  <p className="font-semibold text-gray-700 mb-1">Drop a photo here or click to browse</p>
-                  <p className="text-sm text-gray-400">JPG, PNG, WEBP, HEIC accepted</p>
+                  <p className="font-semibold text-ink-high mb-1">Drop a photo here or click to browse</p>
+                  <p className="text-sm text-ink-low">JPG, PNG, WEBP, HEIC accepted</p>
                 </div>
               )}
             </div>
@@ -194,33 +194,33 @@ export default function Onboard() {
             {error && <p className="text-sm text-paw-red text-center">{error}</p>}
 
             <div className="flex flex-col gap-1">
-              <label className="text-xs font-semibold uppercase tracking-widest text-gray-400">Dog's Name</label>
+              <label className="text-xs font-semibold uppercase tracking-widest text-ink-low">Dog's Name</label>
               <input
                 type="text"
                 placeholder="e.g. Buddy"
                 value={form.name}
                 onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
-                className="border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-800 focus:outline-none focus:border-paw-red"
+                className="border border-gray-200 rounded-xl px-4 py-3 text-sm text-ink-high focus:outline-none focus:border-paw-red"
               />
             </div>
 
             <div className="flex flex-col gap-1">
-              <label className="text-xs font-semibold uppercase tracking-widest text-gray-400">Breed</label>
+              <label className="text-xs font-semibold uppercase tracking-widest text-ink-low">Breed</label>
               <input
                 type="text"
                 value={form.breed}
                 onChange={e => setForm(f => ({ ...f, breed: e.target.value }))}
-                className="border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-800 focus:outline-none focus:border-paw-red"
+                className="border border-gray-200 rounded-xl px-4 py-3 text-sm text-ink-high focus:outline-none focus:border-paw-red"
               />
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div className="flex flex-col gap-1">
-                <label className="text-xs font-semibold uppercase tracking-widest text-gray-400">Size</label>
+                <label className="text-xs font-semibold uppercase tracking-widest text-ink-low">Size</label>
                 <select
                   value={form.size}
                   onChange={e => setForm(f => ({ ...f, size: e.target.value }))}
-                  className="border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-800 focus:outline-none focus:border-paw-red"
+                  className="border border-gray-200 rounded-xl px-4 py-3 text-sm text-ink-high focus:outline-none focus:border-paw-red"
                 >
                   <option value="">Select</option>
                   <option value="small">Small</option>
@@ -229,24 +229,24 @@ export default function Onboard() {
                 </select>
               </div>
               <div className="flex flex-col gap-1">
-                <label className="text-xs font-semibold uppercase tracking-widest text-gray-400">Est. Weight (lbs)</label>
+                <label className="text-xs font-semibold uppercase tracking-widest text-ink-low">Est. Weight (lbs)</label>
                 <input
                   type="text"
                   value={form.weight}
                   onChange={e => setForm(f => ({ ...f, weight: e.target.value }))}
-                  className="border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-800 focus:outline-none focus:border-paw-red"
+                  className="border border-gray-200 rounded-xl px-4 py-3 text-sm text-ink-high focus:outline-none focus:border-paw-red"
                 />
               </div>
             </div>
 
             <div className="flex flex-col gap-1">
-              <label className="text-xs font-semibold uppercase tracking-widest text-gray-400">Age</label>
+              <label className="text-xs font-semibold uppercase tracking-widest text-ink-low">Est. Age (years)</label>
               <input
                 type="text"
                 placeholder="e.g. 3 years"
                 value={form.age}
                 onChange={e => setForm(f => ({ ...f, age: e.target.value }))}
-                className="border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-800 focus:outline-none focus:border-paw-red"
+                className="border border-gray-200 rounded-xl px-4 py-3 text-sm text-ink-high focus:outline-none focus:border-paw-red"
               />
             </div>
 
@@ -277,7 +277,7 @@ export default function Onboard() {
 
             <button
               onClick={() => { setStep(STEP_UPLOAD); setPreview(null); setPhotoFile(null); setError(null) }}
-              className="text-xs text-gray-400 hover:text-paw-red transition-colors uppercase tracking-wide text-center"
+              className="text-xs text-ink-low hover:text-paw-red transition-colors uppercase tracking-wide text-center"
             >
               ← Use a different photo
             </button>
