@@ -21,9 +21,9 @@ export default function App() {
           <Route path="/account" element={<Account />} />
           <Route path="/dog/:id" element={<Dog />} />
           <Route path="/vets" element={<Vets />} />
+          <Route path="/history" element={<WalkHistory />} />
         </Routes>
       </div>
     </TransitionProvider>
-
   )
 }
