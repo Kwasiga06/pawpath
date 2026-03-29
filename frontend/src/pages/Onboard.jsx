@@ -119,16 +119,16 @@ export default function Onboard() {
   }
 
   return (
-    <div className="min-h-screen bg-paw-cream flex items-center justify-center px-6 py-24">
-      <div className="w-full max-w-lg">
+    <div className="min-h-screen bg-paw-red flex items-center justify-center px-6 py-24">
+      <div className="w-full max-w-lg" style={{ animation: 'fadeSlideUp 0.6s ease-out forwards' }}>
 
         {/* Header */}
         <div className="text-center mb-10">
-          <p className="text-xs font-semibold uppercase tracking-widest text-paw-blue mb-2">Welcome to PawPath</p>
-          <h1 className="font-display text-5xl uppercase tracking-tight text-gray-900">
+          <p className="text-xs font-semibold uppercase tracking-widest text-paw-cream/70 mb-2">Welcome to PawPath</p>
+          <h1 className="font-display text-5xl uppercase tracking-tight text-white">
             {step === STEP_UPLOAD ? "Let's Meet Your Dog" : 'Confirm Your Dog'}
           </h1>
-          <p className="text-gray-500 mt-3 text-sm">
+          <p className="text-white/60 mt-3 text-sm">
             {step === STEP_UPLOAD
               ? "Upload a photo and we'll identify your dog's breed automatically."
               : 'Check the details below — edit anything that looks off.'}
@@ -137,9 +137,9 @@ export default function Onboard() {
 
         {/* Step indicator */}
         <div className="flex items-center gap-3 justify-center mb-8">
-          <div className="w-8 h-8 rounded-full bg-paw-red text-white flex items-center justify-center text-xs font-bold">1</div>
-          <div className={`h-0.5 w-12 transition-colors ${step === STEP_FORM ? 'bg-paw-red' : 'bg-gray-200'}`} />
-          <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-colors ${step === STEP_FORM ? 'bg-paw-red text-white' : 'bg-gray-200 text-gray-400'}`}>2</div>
+          <div className="w-8 h-8 rounded-full bg-paw-cream text-paw-red flex items-center justify-center text-xs font-bold">1</div>
+          <div className={`h-0.5 w-12 transition-colors ${step === STEP_FORM ? 'bg-paw-cream' : 'bg-white/20'}`} />
+          <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-colors ${step === STEP_FORM ? 'bg-paw-cream text-paw-red' : 'bg-white/20 text-white/50'}`}>2</div>
         </div>
 
         {/* Step 1: Upload */}

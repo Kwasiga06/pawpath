@@ -6,6 +6,8 @@ export default function Navbar() {
   const [open, setOpen] = useState(false)
   const [user, setUser] = useState(null)
   const [hidden, setHidden] = useState(false)
+  const [transitioning, setTransitioning] = useState(false)
+  const [overlayLeaving, setOverlayLeaving] = useState(false)
   const { pathname } = useLocation()
   const navigate = useNavigate()
 
@@ -30,6 +32,18 @@ export default function Navbar() {
     return () => window.removeEventListener('scroll', onScroll)
   }, [])
 
+  function handleSignUp() {
+    setTransitioning(true)
+    setTimeout(() => {
+      navigate('/onboard')
+      setOverlayLeaving(true)
+    }, 1000)
+    setTimeout(() => {
+      setTransitioning(false)
+      setOverlayLeaving(false)
+    }, 1600)
+  }
+
   async function handleSignOut() {
     await supabase.auth.signOut()
     navigate('/')
@@ -50,7 +64,19 @@ export default function Navbar() {
   const displayName = user?.user_metadata?.full_name?.split(' ')[0] || user?.email?.split('@')[0]
 
   return (
+    <>
+    {transitioning && (
+      <div
+        className="fixed inset-0 z-[200] bg-paw-red"
+        style={{ animation: overlayLeaving
+          ? 'slideOutToLeft 0.6s ease-in-out forwards'
+          : 'slideInFromRight 1s ease-in-out forwards'
+        }}
+      />
+    )}
     <nav className={`fixed top-0 left-0 right-0 z-50 bg-paw-cream/90 backdrop-blur-sm transition-transform duration-300 ${hidden ? '-translate-y-full' : 'translate-y-0'}`}>
+      {/* Full-width red strip at top of page */}
+      <div className="absolute top-0 left-0 right-0 h-3 bg-paw-red pointer-events-none" />
       <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
         {/* Logo */}
         <Link to="/" className="flex items-center gap-2">
@@ -59,14 +85,14 @@ export default function Navbar() {
         </Link>
 
         {/* Desktop nav */}
-        <div className="hidden md:flex items-center gap-8">
-          <Link to="/" className={`text-sm font-semibold uppercase tracking-wide transition-colors ${pathname === '/' ? 'text-paw-red' : 'text-gray-600 hover:text-paw-red'}`}>
+        <div className="hidden md:flex self-stretch items-stretch gap-8">
+          <Link to="/" className={`flex items-center text-sm font-semibold uppercase tracking-wide transition-colors ${pathname === '/' ? 'text-paw-red' : 'text-gray-600 hover:text-paw-red'}`}>
             Home
           </Link>
-          <a href="/#how-it-works" className="text-sm font-semibold uppercase tracking-wide text-gray-600 hover:text-paw-red transition-colors">
+          <a href="/#how-it-works" className="flex items-center text-sm font-semibold uppercase tracking-wide text-gray-600 hover:text-paw-red transition-colors">
             How It Works
           </a>
-          <a href="/#features" className="text-sm font-semibold uppercase tracking-wide text-gray-600 hover:text-paw-red transition-colors">
+          <a href="/#features" className="flex items-center text-sm font-semibold uppercase tracking-wide text-gray-600 hover:text-paw-red transition-colors">
             Features
           </a>
           <Link to="/vets" className={`text-sm font-semibold uppercase tracking-wide transition-colors ${pathname === '/vets' ? 'text-paw-red' : 'text-gray-600 hover:text-paw-red'}`}>
@@ -99,10 +125,13 @@ export default function Navbar() {
                 Log In
               </button>
               <button
-                onClick={() => navigate('/onboard')}
-                className="bg-paw-red text-white text-sm font-semibold uppercase tracking-wide px-6 py-2 rounded-pill hover:bg-red-700 transition-colors"
+                onClick={handleSignUp}
+                className="relative self-stretch mb-2 flex items-center justify-center text-white text-sm font-semibold uppercase tracking-wide px-8 overflow-visible hover:opacity-90 transition-opacity"
               >
-                Sign Up
+                <svg viewBox="0 0 120 74" fill="none" className="absolute inset-0 w-full h-full" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M120 12L120 54C120 65.0457 111.046 74 100 74L20 74C8.95431 74 0 65.0457 0 54L0 12L0 8L0 0L120 0L120 8L120 12Z" fill="#e33529"/>
+                </svg>
+                <span className="relative z-10">Sign Up</span>
               </button>
             </>
           )}
@@ -138,7 +167,7 @@ export default function Navbar() {
               <button onClick={() => { setOpen(false); handleLogIn() }} className="text-sm font-semibold uppercase tracking-wide text-gray-600 hover:text-paw-red transition-colors text-center">
                 Log In
               </button>
-              <button onClick={() => { setOpen(false); navigate('/onboard') }} className="bg-paw-red text-white text-sm font-semibold uppercase tracking-wide px-6 py-2 rounded-pill text-center hover:bg-red-700 transition-colors">
+              <button onClick={() => { setOpen(false); handleSignUp() }} className="border-2 border-paw-red text-paw-red text-sm font-semibold uppercase tracking-wide px-6 py-2 rounded-pill text-center hover:bg-paw-red hover:text-white transition-colors">
                 Sign Up
               </button>
             </>
@@ -146,5 +175,6 @@ export default function Navbar() {
         </div>
       )}
     </nav>
+    </>
   )
 }
