@@ -6,6 +6,7 @@ import { useTransition } from '../lib/TransitionContext'
 function Account() {
   const [user, setUser] = useState(undefined)
   const [dogs, setDogs] = useState([])
+  const [walks, setWalks] = useState([])
   const navigate = useNavigate()
   const { transitionTo } = useTransition()
 
@@ -40,6 +41,14 @@ function Account() {
         .select('*')
         .eq('owner_id', u.id)
         .then(({ data }) => setDogs(data ?? []))
+
+      supabase
+        .from('walks')
+        .select('*')
+        .eq('owner_id', u.id)
+        .order('started_at', { ascending: false })
+        .limit(20)
+        .then(({ data }) => setWalks(data ?? []))
     }
 
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -133,6 +142,52 @@ function Account() {
                   </div>
                 </div>
               ))}
+            </div>
+          )}
+        </section>
+
+        {/* Walk History */}
+        <section>
+          <div className="mb-6">
+            <p className="text-sm font-semibold uppercase tracking-widest text-paw-blue mb-1">Recent activity</p>
+            <h2 className="font-display text-4xl uppercase tracking-tight text-ink">Walk History</h2>
+          </div>
+
+          {walks.length === 0 ? (
+            <div className="bg-white rounded-3xl p-10 flex flex-col items-center text-center">
+              <span className="text-5xl mb-4">🦮</span>
+              <p className="text-ink-mid text-sm">No walks yet. Plan a walk and hit Start Walk!</p>
+            </div>
+          ) : (
+            <div className="bg-white rounded-3xl divide-y divide-gray-100">
+              {walks.map((w) => {
+                const mins = Math.round((w.duration_seconds ?? 0) / 60)
+                const miles = ((w.distance_meters ?? 0) / 1609.344).toFixed(2)
+                const date = w.started_at
+                  ? new Date(w.started_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+                  : null
+                return (
+                  <div key={w.id} className="flex items-center justify-between px-8 py-5 gap-4">
+                    <div className="flex-1 min-w-0">
+                      <p className="font-semibold text-ink truncate">{w.park_name ?? 'Walk'}</p>
+                      <p className="text-xs text-ink-low mt-0.5">
+                        {w.dog_name && <span className="mr-2">{w.dog_name}</span>}
+                        {date}
+                      </p>
+                    </div>
+                    <div className="flex gap-4 text-right flex-shrink-0">
+                      <div>
+                        <p className="text-xs text-ink-low uppercase tracking-widest">Dist</p>
+                        <p className="text-sm font-semibold text-ink">{miles} mi</p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-ink-low uppercase tracking-widest">Time</p>
+                        <p className="text-sm font-semibold text-ink">{mins} min</p>
+                      </div>
+                    </div>
+                  </div>
+                )
+              })}
             </div>
           )}
         </section>
