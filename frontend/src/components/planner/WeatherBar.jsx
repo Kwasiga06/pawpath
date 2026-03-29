@@ -15,7 +15,7 @@ function getWalkScore(tempF, description) {
   return { score: 92, label: 'Great day for a walk!' }
 }
 
-export default function WeatherBar() {
+export default function WeatherBar({ onWeatherLoaded }) {
   const [weather, setWeather] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -49,6 +49,7 @@ export default function WeatherBar() {
           const walk = getWalkScore(tempF, data.description)
           const aqiInfo = getAqiLabel(data.aqi ?? 0)
 
+          onWeatherLoaded?.({ temp: tempF, condition: data.description, aqi: data.aqi ?? 0 })
           setWeather({
             location: city,
             temp: tempF,

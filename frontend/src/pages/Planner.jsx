@@ -9,6 +9,7 @@ export default function Planner() {
   const [selectedDog, setSelectedDog] = useState(null)
   const [dogs, setDogs] = useState([])
   const [loading, setLoading] = useState(true)
+  const [weather, setWeather] = useState(null)
   const resultsRef = useRef(null)
   const navigate = useNavigate()
 
@@ -47,7 +48,7 @@ export default function Planner() {
 
       <div className="max-w-5xl mx-auto px-6 py-12 space-y-10">
         {/* Weather bar */}
-        <WeatherBar />
+        <WeatherBar onWeatherLoaded={setWeather} />
 
         {/* Dog selector */}
         <div className="bg-white rounded-3xl p-8">
@@ -102,7 +103,7 @@ export default function Planner() {
         {/* Results */}
         {breed && (
           <div ref={resultsRef}>
-            <WalkRecommendations breed={breed} />
+            <WalkRecommendations breed={breed} weather={weather} />
           </div>
         )}
       </div>
