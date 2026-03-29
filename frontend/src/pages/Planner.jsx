@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabaseClient'
 import BreedUploader from '../components/planner/BreedUploader'
 import WalkRecommendations from '../components/planner/WalkRecommendations'
-import MapView from '../components/planner/MapView'
 import WeatherBar from '../components/planner/WeatherBar'
 
 export default function Planner() {
@@ -74,7 +73,6 @@ export default function Planner() {
             ) : (
               <>
                 <WalkRecommendations breed={breed} />
-                <MapView breed={breed} />
               </>
             )}
           </div>

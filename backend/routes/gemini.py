@@ -6,6 +6,9 @@ from fastapi import APIRouter, UploadFile, File, HTTPException
 from google import genai
 from google.genai import types # Import types for configuration
 from PIL import Image
+from pillow_heif import register_heif_opener
+
+register_heif_opener()
 
 router = APIRouter()
 CLIENT = None

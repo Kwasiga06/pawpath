@@ -7,7 +7,8 @@ export default function BreedUploader({ onBreedDetected, onAnalysisStart, analyz
   const inputRef = useRef(null)
 
   async function handleFile(file) {
-    if (!file || !file.type.startsWith('image/')) return
+    const heic = file.name.toLowerCase().endsWith('.heic') || file.name.toLowerCase().endsWith('.heif')
+    if (!file || (!file.type.startsWith('image/') && !heic)) return
     const url = URL.createObjectURL(file)
     setPreview(url)
     setError(null)
@@ -16,7 +17,7 @@ export default function BreedUploader({ onBreedDetected, onAnalysisStart, analyz
     try {
       const formData = new FormData()
       formData.append('file1', file)
-      const res = await fetch('http://localhost:8000/api/identify', {
+      const res = await fetch('/api/identify', {
         method: 'POST',
         body: formData,
       })
@@ -78,7 +79,7 @@ export default function BreedUploader({ onBreedDetected, onAnalysisStart, analyz
               <span className="text-3xl">🐶</span>
             </div>
             <p className="font-semibold text-gray-700 mb-1">Drop a photo here or click to browse</p>
-            <p className="text-sm text-gray-400">JPG, PNG, WEBP accepted</p>
+            <p className="text-sm text-gray-400">JPG, PNG, WEBP, HEIC accepted</p>
           </div>
         )}
       </div>
@@ -86,7 +87,7 @@ export default function BreedUploader({ onBreedDetected, onAnalysisStart, analyz
       <input
         ref={inputRef}
         type="file"
-        accept="image/*"
+        accept="image/*,.heic,.heif"
         className="hidden"
         onChange={handleChange}
       />
