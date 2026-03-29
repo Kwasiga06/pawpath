@@ -1,7 +1,8 @@
 import os
 import json
 import httpx
-from fastapi import APIRouter, Query
+from typing import Optional
+from fastapi import APIRouter, Query, HTTPException
 from google import genai
 from google.genai import types
 
@@ -10,14 +11,54 @@ router = APIRouter()
 GOOGLE_MAPS_API_KEY = os.getenv("GOOGLE_MAPS_API_KEY")
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 
-_GEMINI_CLIENT = None
-
+GEMINI_CLIENT = None
 
 def get_gemini_client():
-    global _GEMINI_CLIENT
-    if _GEMINI_CLIENT is None:
-        _GEMINI_CLIENT = genai.Client(api_key=GEMINI_API_KEY)
-    return _GEMINI_CLIENT
+    global GEMINI_CLIENT
+    if GEMINI_CLIENT is None:
+        api_key = os.getenv("GEMINI_API_KEY")
+        if not api_key:
+            raise HTTPException(status_code=500, detail="GEMINI_API_KEY not configured")
+        GEMINI_CLIENT = genai.Client(api_key=api_key)
+    return GEMINI_CLIENT
+
+
+@router.get("/recommendations")
+async def get_walk_recommendations(
+    breed: str = Query(...),
+    temp: Optional[float] = Query(None),
+    condition: Optional[str] = Query(None),
+    aqi: Optional[int] = Query(None),
+):
+    client = get_gemini_client()
+
+    weather_context = (
+        f"Current conditions: {temp}°F, {condition}, AQI {aqi}. Adjust recommendations accordingly."
+        if temp is not None and condition is not None and aqi is not None
+        else "No weather data — base recommendations on breed's typical needs only."
+    )
+
+    prompt = f"""You are a canine exercise expert. Generate walk recommendations for a {breed}.
+{weather_context}
+
+Return ONLY JSON with exactly these fields:
+{{
+  "duration": <integer minutes>,
+  "distance": <float miles, one decimal>,
+  "intensity": <"Low"|"Low-Moderate"|"Moderate"|"High"|"Very High">,
+  "tips": [<3 concise actionable strings specific to this breed and conditions>],
+  "best_time": <short time of day string>
+}}"""
+
+    try:
+        response = client.models.generate_content(
+            model="gemini-3-flash-preview",
+            contents=[prompt],
+            config=types.GenerateContentConfig(response_mime_type="application/json")
+        )
+        return json.loads(response.text)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Recommendation generation failed: {str(e)}")
 
 
 async def check_weather(client: httpx.AsyncClient, lat: float, lon: float):
