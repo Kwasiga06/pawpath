@@ -151,17 +151,6 @@ function Account() {
               </div>
             </div> 
 
-            {/* Units row */}
-            <div className="flex items-center justify-between px-8 py-5">
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-widest text-gray-400 mb-0.5">Distance units</p>
-                <p className="text-sm text-gray-800">Kilometres</p>
-              </div>
-              <button className="text-xs font-semibold uppercase tracking-wide text-paw-blue hover:text-paw-red transition-colors">
-                Change
-              </button>
-            </div>
-
             {/* Sign out row */}
             <div className="flex items-center justify-between px-8 py-5">
               <div>
