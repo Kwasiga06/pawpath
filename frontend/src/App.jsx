@@ -6,6 +6,7 @@ import Account from './components/Account'
 import Dog from './pages/Dog'
 import Onboard from './pages/Onboard'
 import Vets from './pages/Vets'
+import WalkHistory from './pages/WalkHistory'
 
 export default function App() {
   return (
@@ -18,6 +19,7 @@ export default function App() {
         <Route path="/account" element={<Account />} />
         <Route path="/dog/:id" element={<Dog />} />
         <Route path="/vets" element={<Vets />} />
+        <Route path="/history" element={<WalkHistory />} />
       </Routes>
     </div>
   )

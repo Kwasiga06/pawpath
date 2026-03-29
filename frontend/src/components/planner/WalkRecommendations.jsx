@@ -26,10 +26,41 @@ const intensityColor = {
   'Very High': 'bg-red-100 text-red-700',
 }
 
+function WalkScoreBadge({ score }) {
+  if (score == null) return null
+  const color = score >= 80 ? 'text-green-600' : score >= 55 ? 'text-yellow-600' : 'text-red-600'
+  const strokeColor = score >= 80 ? '#16a34a' : score >= 55 ? '#ca8a04' : '#dc2626'
+  const label = score >= 80 ? 'Great' : score >= 55 ? 'Fair' : 'Poor'
+  const radius = 20
+  const circumference = 2 * Math.PI * radius
+  const offset = circumference - (score / 100) * circumference
+  return (
+    <div className="flex flex-col items-center gap-1">
+      <div className="relative w-16 h-16">
+        <svg className="w-full h-full -rotate-90" viewBox="0 0 48 48">
+          <circle cx="24" cy="24" r={radius} fill="none" stroke="#e5e7eb" strokeWidth="4" />
+          <circle
+            cx="24" cy="24" r={radius} fill="none"
+            stroke={strokeColor}
+            strokeWidth="4"
+            strokeDasharray={circumference}
+            strokeDashoffset={offset}
+            strokeLinecap="round"
+          />
+        </svg>
+        <span className={`absolute inset-0 flex items-center justify-center text-sm font-bold ${color}`}>{score}</span>
+      </div>
+      <p className={`text-xs font-semibold uppercase tracking-wide ${color}`}>{label}</p>
+      <p className="text-xs text-gray-400 uppercase tracking-wide">Walk Score</p>
+    </div>
+  )
+}
+
 export default function WalkRecommendations({ breed, routeData, routeLoading, routeError }) {
   const data = breedData[breed] || breedData.default
   const warnings = routeData?.advisory?.warnings ?? []
   const notRecommended = routeData?.advisory?.recommendation === 'not_recommended'
+  const walkScore = routeData?.walk_score ?? null
   const [distVal, distUnit] = routeData?.total_distance?.split(' ') ?? [`${data.distance}`, 'mi']
   const [durVal, durUnit] = routeData?.total_duration?.split(' ') ?? [`${data.duration}`, 'min']
 
@@ -61,9 +92,16 @@ export default function WalkRecommendations({ breed, routeData, routeLoading, ro
           <p className="text-xs text-gray-400 uppercase tracking-widest">Breed detected</p>
           <h2 className="font-display text-4xl uppercase tracking-tight text-gray-900">{breed}</h2>
         </div>
-        <span className={`ml-auto text-xs font-bold uppercase tracking-wide px-3 py-1.5 rounded-pill ${intensityColor[data.intensity]}`}>
-          {data.intensity} Energy
-        </span>
+        <div className="ml-auto flex items-center gap-4">
+          {routeLoading ? (
+            <div className="w-8 h-8 border-2 border-gray-200 border-t-transparent rounded-full animate-spin" />
+          ) : (
+            <WalkScoreBadge score={walkScore} />
+          )}
+          <span className={`text-xs font-bold uppercase tracking-wide px-3 py-1.5 rounded-pill ${intensityColor[data.intensity]}`}>
+            {data.intensity} Energy
+          </span>
+        </div>
       </div>
 
       {/* Stats */}

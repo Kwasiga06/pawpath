@@ -72,6 +72,9 @@ export default function Navbar() {
           <Link to="/vets" className={`text-sm font-semibold uppercase tracking-wide transition-colors ${pathname === '/vets' ? 'text-paw-red' : 'text-gray-600 hover:text-paw-red'}`}>
             Find a Vet
           </Link>
+          <Link to="/history" className={`text-sm font-semibold uppercase tracking-wide transition-colors ${pathname === '/history' ? 'text-paw-red' : 'text-gray-600 hover:text-paw-red'}`}>
+            History
+          </Link>
           {user ? (
             <>
               <Link
@@ -120,6 +123,7 @@ export default function Navbar() {
           <a href="/#how-it-works" className="text-sm font-semibold uppercase tracking-wide text-gray-600 hover:text-paw-red transition-colors" onClick={() => setOpen(false)}>How It Works</a>
           <a href="/#features" className="text-sm font-semibold uppercase tracking-wide text-gray-700" onClick={() => setOpen(false)}>Features</a>
           <Link to="/vets" className="text-sm font-semibold uppercase tracking-wide text-gray-700" onClick={() => setOpen(false)}>Find a Vet</Link>
+          <Link to="/history" className="text-sm font-semibold uppercase tracking-wide text-gray-700" onClick={() => setOpen(false)}>History</Link>
           {user ? (
             <>
               <Link to="/account" className="bg-paw-red text-white text-sm font-semibold uppercase tracking-wide px-6 py-2 rounded-pill text-center hover:bg-red-700 transition-colors" onClick={() => setOpen(false)}>

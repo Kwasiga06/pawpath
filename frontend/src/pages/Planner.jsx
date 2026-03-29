@@ -5,6 +5,7 @@ import WalkRecommendations from '../components/planner/WalkRecommendations'
 import WeatherBar from '../components/planner/WeatherBar'
 import MapView from '../components/planner/MapView'
 import BreedUploader from '../components/planner/BreedUploader'
+import LiveWalkTracker from '../components/planner/LiveWalkTracker'
 
 export default function Planner() {
   const [breed, setBreed] = useState(null)
@@ -15,6 +16,7 @@ export default function Planner() {
   const [routeLoading, setRouteLoading] = useState(false)
   const [routeError, setRouteError] = useState(null)
   const [originCoords, setOriginCoords] = useState(null)
+  const [walkTrackerOpen, setWalkTrackerOpen] = useState(false)
   const resultsRef = useRef(null)
   const navigate = useNavigate()
 
@@ -169,9 +171,30 @@ export default function Planner() {
           <div ref={resultsRef} className="space-y-6">
             <WalkRecommendations breed={breed} routeData={routeData} routeLoading={routeLoading} routeError={routeError} />
             <MapView routeData={routeData} routeLoading={routeLoading} breed={breed} originCoords={originCoords} />
+
+            {/* Start Walk CTA */}
+            <div className="bg-white rounded-3xl p-8 text-center">
+              <button
+                onClick={() => setWalkTrackerOpen(true)}
+                className="bg-paw-red text-white font-display text-2xl uppercase tracking-widest px-14 py-5 rounded-2xl hover:bg-red-700 transition-colors"
+              >
+                Start Walk
+              </button>
+              <p className="text-gray-400 text-sm mt-3">
+                Tracks your live route and saves to history
+              </p>
+            </div>
           </div>
         )}
       </div>
+
+      {walkTrackerOpen && selectedDog && (
+        <LiveWalkTracker
+          dog={selectedDog}
+          parkName={routeData?.destination?.name ?? null}
+          onClose={() => setWalkTrackerOpen(false)}
+        />
+      )}
     </div>
   )
 }
