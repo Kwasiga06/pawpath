@@ -34,6 +34,18 @@ export default function Navbar() {
     await supabase.auth.signOut()
   }
 
+  async function handleLogIn() {
+    const { data: { session } } = await supabase.auth.getSession()
+    if (session) {
+      navigate('/account')
+    } else {
+      await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: { redirectTo: window.location.origin + '/account' },
+      })
+    }
+  }
+
   const displayName = user?.user_metadata?.full_name?.split(' ')[0] || user?.email?.split('@')[0]
 
   return (
@@ -72,12 +84,20 @@ export default function Navbar() {
               </button>
             </>
           ) : (
-            <button
-              onClick={() => navigate('/onboard')}
-              className="bg-paw-red text-white text-sm font-semibold uppercase tracking-wide px-6 py-2 rounded-pill hover:bg-red-700 transition-colors"
-            >
-              Sign Up
-            </button>
+            <>
+              <button
+                onClick={handleLogIn}
+                className="text-sm font-semibold uppercase tracking-wide text-gray-600 hover:text-paw-red transition-colors"
+              >
+                Log In
+              </button>
+              <button
+                onClick={() => navigate('/onboard')}
+                className="bg-paw-red text-white text-sm font-semibold uppercase tracking-wide px-6 py-2 rounded-pill hover:bg-red-700 transition-colors"
+              >
+                Sign Up
+              </button>
+            </>
           )}
         </div>
 
@@ -105,9 +125,14 @@ export default function Navbar() {
               </button>
             </>
           ) : (
-            <button onClick={() => { setOpen(false); navigate('/onboard') }} className="bg-paw-red text-white text-sm font-semibold uppercase tracking-wide px-6 py-2 rounded-pill text-center hover:bg-red-700 transition-colors">
-              Sign Up
-            </button>
+            <>
+              <button onClick={() => { setOpen(false); handleLogIn() }} className="text-sm font-semibold uppercase tracking-wide text-gray-600 hover:text-paw-red transition-colors text-center">
+                Log In
+              </button>
+              <button onClick={() => { setOpen(false); navigate('/onboard') }} className="bg-paw-red text-white text-sm font-semibold uppercase tracking-wide px-6 py-2 rounded-pill text-center hover:bg-red-700 transition-colors">
+                Sign Up
+              </button>
+            </>
           )}
         </div>
       )}
