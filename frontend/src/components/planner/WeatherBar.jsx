@@ -53,11 +53,16 @@ export default function WeatherBar() {
             location: city,
             temp: tempF,
             condition: data.description,
-            icon: data.description?.toLowerCase().includes('cloud') ? '⛅'
-              : data.description?.toLowerCase().includes('rain') ? '🌧️'
-              : data.description?.toLowerCase().includes('snow') ? '❄️'
-              : data.description?.toLowerCase().includes('thunder') ? '⛈️'
-              : '☀️',
+            icon: (() => {
+              const desc = data.description?.toLowerCase() ?? ''
+              const hour = new Date().getHours()
+              const isNight = hour < 6 || hour >= 20
+              if (desc.includes('thunder')) return '⛈️'
+              if (desc.includes('snow')) return '❄️'
+              if (desc.includes('rain') || desc.includes('drizzle')) return '🌧️'
+              if (desc.includes('cloud')) return isNight ? '☁️' : '⛅'
+              return isNight ? '🌙' : '☀️'
+            })(),
             humidity: data.humidity != null ? `${data.humidity}%` : '--',
             wind: data.wind_speed != null ? `${Math.round(data.wind_speed)} mph` : '--',
             aqi: data.aqi ?? '--',
@@ -122,7 +127,7 @@ export default function WeatherBar() {
           <div className="text-center">
             <p className="text-gray-400 uppercase tracking-wide text-xs mb-0.5">Air Quality</p>
             <span className={`text-xs font-bold px-2 py-0.5 rounded-pill ${w.aqiColor}`}>
-              {w.aqiLabel} ({w.aqi})
+              {w.aqiLabel} · {w.aqi} / 500
             </span>
           </div>
         </div>
