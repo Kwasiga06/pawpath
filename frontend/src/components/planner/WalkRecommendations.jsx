@@ -173,7 +173,6 @@ export default function WalkRecommendations({ breed, weather, routeData, routeLo
           </div>
         )}
         </div>
-      </div>
 
       {/* Tips */}
       <div className="space-y-5">
