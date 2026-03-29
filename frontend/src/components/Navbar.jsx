@@ -1,15 +1,30 @@
 import { useState, useEffect } from 'react'
-import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabaseClient'
+import { useTransition } from '../lib/TransitionContext'
 
 export default function Navbar() {
   const [open, setOpen] = useState(false)
   const [user, setUser] = useState(null)
   const [hidden, setHidden] = useState(false)
-  const [transitioning, setTransitioning] = useState(false)
-  const [overlayLeaving, setOverlayLeaving] = useState(false)
   const { pathname } = useLocation()
   const navigate = useNavigate()
+  const { transitionTo } = useTransition()
+
+  function handleSectionNav(sectionId) {
+    if (pathname === '/') {
+      transitionTo(() => {
+        document.getElementById(sectionId)?.scrollIntoView({ behavior: 'smooth' })
+      }, 'bg-paw-cream')
+    } else {
+      transitionTo(() => {
+        navigate('/')
+        setTimeout(() => {
+          document.getElementById(sectionId)?.scrollIntoView({ behavior: 'smooth' })
+        }, 100)
+      }, 'bg-paw-cream')
+    }
+  }
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -32,27 +47,15 @@ export default function Navbar() {
     return () => window.removeEventListener('scroll', onScroll)
   }, [])
 
-  function handleSignUp() {
-    setTransitioning(true)
-    setTimeout(() => {
-      navigate('/onboard')
-      setOverlayLeaving(true)
-    }, 1000)
-    setTimeout(() => {
-      setTransitioning(false)
-      setOverlayLeaving(false)
-    }, 1600)
-  }
-
   async function handleSignOut() {
     await supabase.auth.signOut()
-    navigate('/')
+    transitionTo('/', 'bg-paw-cream')
   }
 
   async function handleLogIn() {
     const { data: { session } } = await supabase.auth.getSession()
     if (session) {
-      navigate('/account')
+      transitionTo('/account', 'bg-paw-cream')
     } else {
       await supabase.auth.signInWithOAuth({
         provider: 'google',
@@ -65,67 +68,61 @@ export default function Navbar() {
 
   return (
     <>
-    {transitioning && (
-      <div
-        className="fixed inset-0 z-[200] bg-paw-red"
-        style={{ animation: overlayLeaving
-          ? 'slideOutToLeft 0.6s ease-in-out forwards'
-          : 'slideInFromRight 1s ease-in-out forwards'
-        }}
-      />
-    )}
-    <nav className={`fixed top-0 left-0 right-0 z-50 bg-paw-cream/90 backdrop-blur-sm transition-transform duration-300 ${hidden ? '-translate-y-full' : 'translate-y-0'}`}>
+    <nav className={`fixed top-0 left-0 right-0 z-50 backdrop-blur-sm transition-transform duration-300 ${hidden ? '-translate-y-full' : 'translate-y-0'} ${pathname === '/onboard' ? 'bg-paw-red' : 'bg-paw-cream/90'}`}>
       {/* Full-width red strip at top of page */}
       <div className="absolute top-0 left-0 right-0 h-3 bg-paw-red pointer-events-none" />
       <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
         {/* Logo */}
-        <Link to="/" className="flex items-center gap-2">
-          <img src="/dog-logo.png" alt="PawPath logo" className="h-8 w-8 object-contain" />
-          <span className="font-display text-2xl tracking-tight text-paw-red">PAWPATH</span>
-        </Link>
+        <button onClick={() => transitionTo('/', 'bg-paw-cream')} className="flex items-center gap-2">
+          <img src="/dog-logo.png" alt="PawPath logo" className={`h-8 w-8 object-contain transition-all ${pathname === '/onboard' ? 'brightness-0 invert' : ''}`} />
+          <span className={`font-display text-2xl tracking-tight ${pathname === '/onboard' ? 'text-paw-cream' : 'text-paw-red'}`}>PAWPATH</span>
+        </button>
 
         {/* Desktop nav */}
         <div className="hidden md:flex self-stretch items-stretch gap-8">
-          <Link to="/" className={`flex items-center text-sm font-semibold uppercase tracking-wide transition-colors ${pathname === '/' ? 'text-paw-red' : 'text-gray-600 hover:text-paw-red'}`}>
+          <button onClick={() => transitionTo('/', 'bg-paw-cream')} className={`flex items-center text-sm font-semibold uppercase tracking-wide transition-colors ${pathname === '/onboard' ? 'text-paw-cream hover:text-white' : pathname === '/' ? 'text-paw-red' : 'text-gray-600 hover:text-paw-red'}`}>
             Home
-          </Link>
-          <a href="/#how-it-works" className="flex items-center text-sm font-semibold uppercase tracking-wide text-gray-600 hover:text-paw-red transition-colors">
+          </button>
+          <button onClick={() => handleSectionNav('how-it-works')} className={`flex items-center text-sm font-semibold uppercase tracking-wide transition-colors ${pathname === '/onboard' ? 'text-paw-cream hover:text-white' : 'text-gray-600 hover:text-paw-red'}`}>
             How It Works
-          </a>
-          <a href="/#features" className="flex items-center text-sm font-semibold uppercase tracking-wide text-gray-600 hover:text-paw-red transition-colors">
+          </button>
+          <button onClick={() => handleSectionNav('features')} className={`flex items-center text-sm font-semibold uppercase tracking-wide transition-colors ${pathname === '/onboard' ? 'text-paw-cream hover:text-white' : 'text-gray-600 hover:text-paw-red'}`}>
             Features
-          </a>
-          <Link to="/vets" className={`text-sm font-semibold uppercase tracking-wide transition-colors ${pathname === '/vets' ? 'text-paw-red' : 'text-gray-600 hover:text-paw-red'}`}>
+          </button>
+          <button onClick={() => transitionTo('/vets', 'bg-paw-cream')} className={`flex items-center text-sm font-semibold uppercase tracking-wide transition-colors ${pathname === '/onboard' ? 'text-paw-cream hover:text-white' : pathname === '/vets' ? 'text-paw-red' : 'text-gray-600 hover:text-paw-red'}`}>
             Find a Vet
-          </Link>
-          <Link to="/history" className={`text-sm font-semibold uppercase tracking-wide transition-colors ${pathname === '/history' ? 'text-paw-red' : 'text-gray-600 hover:text-paw-red'}`}>
+          </button>
+          <button onClick={() => transitionTo('/history', 'bg-paw-cream')} className={`flex items-center text-sm font-semibold uppercase tracking-wide transition-colors ${pathname === '/onboard' ? 'text-paw-cream hover:text-white' : pathname === '/history' ? 'text-paw-red' : 'text-gray-600 hover:text-paw-red'}`}>
             History
-          </Link>
+          </button>
           {user ? (
             <>
-              <Link
-                to="/account"
-                className="bg-paw-red text-white text-sm font-semibold uppercase tracking-wide px-6 py-2 rounded-pill hover:bg-red-700 transition-colors"
+              <button
+                onClick={() => transitionTo('/account', 'bg-paw-cream')}
+                className={`flex items-center text-sm font-semibold uppercase tracking-wide transition-colors ${pathname === '/onboard' ? 'text-paw-cream hover:text-white' : 'text-gray-600 hover:text-paw-red'}`}
               >
                 Hi, {displayName}
-              </Link>
+              </button>
               <button
                 onClick={handleSignOut}
-                className="text-sm font-semibold uppercase tracking-wide text-gray-500 hover:text-paw-red transition-colors"
+                className="relative self-stretch mb-2 flex items-center justify-center text-sm font-semibold uppercase tracking-wide px-8 overflow-visible hover:opacity-90 transition-opacity"
               >
-                Sign out
+                <svg viewBox="0 0 120 74" fill="none" className="absolute inset-0 w-full h-full" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M120 12L120 54C120 65.0457 111.046 74 100 74L20 74C8.95431 74 0 65.0457 0 54L0 12L0 8L0 0L120 0L120 8L120 12Z" fill={pathname === '/onboard' ? '#f3f3e9' : '#e33529'}/>
+                </svg>
+                <span className={`relative z-10 ${pathname === '/onboard' ? 'text-paw-red' : 'text-white'}`}>Sign Out</span>
               </button>
             </>
           ) : (
             <>
               <button
                 onClick={handleLogIn}
-                className="text-sm font-semibold uppercase tracking-wide text-gray-600 hover:text-paw-red transition-colors"
+                className={`text-sm font-semibold uppercase tracking-wide transition-colors ${pathname === '/onboard' ? 'text-paw-cream hover:text-white' : 'text-gray-600 hover:text-paw-red'}`}
               >
                 Log In
               </button>
               <button
-                onClick={handleSignUp}
+                onClick={() => transitionTo('/onboard', 'bg-paw-red')}
                 className="relative self-stretch mb-2 flex items-center justify-center text-white text-sm font-semibold uppercase tracking-wide px-8 overflow-visible hover:opacity-90 transition-opacity"
               >
                 <svg viewBox="0 0 120 74" fill="none" className="absolute inset-0 w-full h-full" xmlns="http://www.w3.org/2000/svg">
@@ -148,16 +145,16 @@ export default function Navbar() {
       {/* Mobile menu */}
       {open && (
         <div className="md:hidden bg-paw-cream px-6 py-4 flex flex-col gap-4">
-          <Link to="/" className="text-sm font-semibold uppercase tracking-wide text-gray-700" onClick={() => setOpen(false)}>Home</Link>
-          <a href="/#how-it-works" className="text-sm font-semibold uppercase tracking-wide text-gray-600 hover:text-paw-red transition-colors" onClick={() => setOpen(false)}>How It Works</a>
-          <a href="/#features" className="text-sm font-semibold uppercase tracking-wide text-gray-700" onClick={() => setOpen(false)}>Features</a>
-          <Link to="/vets" className="text-sm font-semibold uppercase tracking-wide text-gray-700" onClick={() => setOpen(false)}>Find a Vet</Link>
-          <Link to="/history" className="text-sm font-semibold uppercase tracking-wide text-gray-700" onClick={() => setOpen(false)}>History</Link>
+          <button onClick={() => { setOpen(false); transitionTo('/', 'bg-paw-cream') }} className="text-sm font-semibold uppercase tracking-wide text-gray-700 text-left">Home</button>
+          <button onClick={() => { setOpen(false); handleSectionNav('how-it-works') }} className="text-sm font-semibold uppercase tracking-wide text-gray-600 hover:text-paw-red transition-colors text-left">How It Works</button>
+          <button onClick={() => { setOpen(false); handleSectionNav('features') }} className="text-sm font-semibold uppercase tracking-wide text-gray-700 text-left">Features</button>
+          <button onClick={() => { setOpen(false); transitionTo('/vets', 'bg-paw-cream') }} className="text-sm font-semibold uppercase tracking-wide text-gray-700 text-left">Find a Vet</button>
+          <button onClick={() => { setOpen(false); transitionTo('/history', 'bg-paw-cream') }} className="text-sm font-semibold uppercase tracking-wide text-gray-700 text-left">History</button>
           {user ? (
             <>
-              <Link to="/account" className="bg-paw-red text-white text-sm font-semibold uppercase tracking-wide px-6 py-2 rounded-pill text-center hover:bg-red-700 transition-colors" onClick={() => setOpen(false)}>
+              <button onClick={() => { setOpen(false); transitionTo('/account', 'bg-paw-cream') }} className="bg-paw-red text-white text-sm font-semibold uppercase tracking-wide px-6 py-2 rounded-pill text-center hover:bg-red-700 transition-colors">
                 Hi, {displayName}
-              </Link>
+              </button>
               <button onClick={() => { setOpen(false); handleSignOut() }} className="text-sm font-semibold uppercase tracking-wide text-gray-500 hover:text-paw-red transition-colors text-center">
                 Sign out
               </button>
@@ -167,7 +164,7 @@ export default function Navbar() {
               <button onClick={() => { setOpen(false); handleLogIn() }} className="text-sm font-semibold uppercase tracking-wide text-gray-600 hover:text-paw-red transition-colors text-center">
                 Log In
               </button>
-              <button onClick={() => { setOpen(false); handleSignUp() }} className="border-2 border-paw-red text-paw-red text-sm font-semibold uppercase tracking-wide px-6 py-2 rounded-pill text-center hover:bg-paw-red hover:text-white transition-colors">
+              <button onClick={() => { setOpen(false); transitionTo('/onboard', 'bg-paw-red') }} className="border-2 border-paw-red text-paw-red text-sm font-semibold uppercase tracking-wide px-6 py-2 rounded-pill text-center hover:bg-paw-red hover:text-white transition-colors">
                 Sign Up
               </button>
             </>

@@ -14,7 +14,13 @@ export default {
           cream: '#f3f3e9',
           blue: '#2b6786',
           'blue-light': '#afd8fb',
-        }
+        },
+        ink: {
+          DEFAULT: 'rgba(0,0,0,1)',
+          high: 'rgba(0,0,0,0.87)',
+          mid: 'rgba(0,0,0,0.60)',
+          low: 'rgba(0,0,0,0.38)',
+        },
       },
       fontFamily: {
         display: ['Bayon', 'sans-serif'],
