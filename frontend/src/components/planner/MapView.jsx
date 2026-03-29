@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 
 const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY ?? ''
 
-export default function MapView({ breed }) {
+export default function MapView({ breed, routeData, routeLoading, originCoords }) {
   const [coords, setCoords] = useState(null)
   const [locationError, setLocationError] = useState(false)
 
@@ -19,8 +19,11 @@ export default function MapView({ breed }) {
 
   const hasKey = GOOGLE_MAPS_API_KEY !== ''
 
+  const routeDestination = routeData?.destination
   const mapUrl = coords
-    ? `https://www.google.com/maps/embed/v1/search?key=${GOOGLE_MAPS_API_KEY}&q=dog+friendly+walking+park&center=${coords.lat},${coords.lng}&zoom=14`
+    ? routeDestination
+      ? `https://www.google.com/maps/embed/v1/directions?key=${GOOGLE_MAPS_API_KEY}&origin=${coords.lat},${coords.lng}&destination=${coords.lat},${coords.lng}&waypoints=${routeDestination.lat},${routeDestination.lng}&mode=walking`
+      : `https://www.google.com/maps/embed/v1/search?key=${GOOGLE_MAPS_API_KEY}&q=dog+friendly+walking+park&center=${coords.lat},${coords.lng}&zoom=14`
     : null
 
   return (
@@ -33,7 +36,11 @@ export default function MapView({ breed }) {
           </h2>
         </div>
         <a
-          href={coords ? `https://www.google.com/maps/search/dog+friendly+park/@${coords.lat},${coords.lng},14z` : 'https://maps.google.com'}
+          href={
+            routeDestination && originCoords
+              ? `https://www.google.com/maps/dir/${originCoords.lat},${originCoords.lng}/${routeDestination.lat},${routeDestination.lng}/${originCoords.lat},${originCoords.lng}`
+              : 'https://maps.google.com'
+          }
           target="_blank"
           rel="noopener noreferrer"
           className="bg-paw-blue text-white text-xs font-semibold uppercase tracking-wide px-4 py-2 rounded-pill hover:bg-blue-700 transition-colors"
@@ -44,7 +51,12 @@ export default function MapView({ breed }) {
 
       {/* Map embed */}
       <div className="rounded-2xl overflow-hidden border border-gray-100 bg-paw-cream">
-        {hasKey && mapUrl ? (
+        {routeLoading && !routeData ? (
+          <div className="h-96 flex flex-col items-center justify-center gap-4 text-center px-6">
+            <div className="w-8 h-8 border-2 border-paw-red border-t-transparent rounded-full animate-spin" />
+            <p className="text-sm text-gray-400 uppercase tracking-widest">Finding the best route...</p>
+          </div>
+        ) : hasKey && mapUrl ? (
           <iframe
             title="Dog Walking Route"
             width="100%"

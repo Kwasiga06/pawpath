@@ -8,6 +8,9 @@ export default function Dog() {
   const [dog, setDog] = useState(undefined)
   const [uploadingPhoto, setUploadingPhoto] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
+  const [editing, setEditing] = useState(false)
+  const [editForm, setEditForm] = useState({})
+  const [saving, setSaving] = useState(false)
   const photoInputRef = useRef(null)
 
   useEffect(() => {
@@ -21,6 +24,31 @@ export default function Dog() {
         else setDog(data)
       })
   }, [id, navigate])
+
+  function startEditing() {
+    setEditForm({ name: dog.name || '', breed: dog.breed || '', age: dog.age || '', weight: dog.weight ?? '' })
+    setEditing(true)
+  }
+
+  async function handleSave() {
+    setSaving(true)
+    try {
+      const updates = {
+        name: editForm.name.trim(),
+        breed: editForm.breed.trim() || null,
+        age: editForm.age.trim() || null,
+        weight: editForm.weight !== '' ? Number(editForm.weight) : null,
+      }
+      const { error } = await supabase.from('dogs').update(updates).eq('id', dog.id)
+      if (error) throw error
+      setDog(d => ({ ...d, ...updates }))
+      setEditing(false)
+    } catch (e) {
+      console.error('Save failed:', e)
+    } finally {
+      setSaving(false)
+    }
+  }
 
   async function handleDelete() {
     if (!confirmDelete) {
@@ -79,12 +107,20 @@ export default function Dog() {
             >
               ← Back to account
             </button>
-            <button
-              onClick={handleDelete}
-              className={`text-xs font-semibold uppercase tracking-widest transition-colors ${confirmDelete ? 'text-white bg-paw-red px-4 py-2 rounded-pill hover:bg-red-700' : 'text-gray-400 hover:text-paw-red'}`}
-            >
-              {confirmDelete ? 'Tap again to confirm' : 'Delete dog'}
-            </button>
+            <div className="flex items-center gap-4">
+              <button
+                onClick={editing ? () => setEditing(false) : startEditing}
+                className="text-xs font-semibold uppercase tracking-widest text-paw-blue hover:text-paw-red transition-colors"
+              >
+                {editing ? 'Cancel' : 'Edit'}
+              </button>
+              <button
+                onClick={handleDelete}
+                className={`text-xs font-semibold uppercase tracking-widest transition-colors ${confirmDelete ? 'text-white bg-paw-red px-4 py-2 rounded-pill hover:bg-red-700' : 'text-gray-400 hover:text-paw-red'}`}
+              >
+                {confirmDelete ? 'Tap again to confirm' : 'Delete dog'}
+              </button>
+            </div>
           </div>
           <div className="flex items-center gap-6">
             {/* Clickable avatar */}
@@ -134,38 +170,70 @@ export default function Dog() {
 
       <div className="max-w-4xl mx-auto px-6 py-12 flex flex-col gap-10">
 
-        {/* Stats */}
+        {/* Stats / Edit */}
         <section>
           <div className="mb-6">
             <p className="text-sm font-semibold uppercase tracking-widest text-paw-blue mb-1">Details</p>
             <h2 className="font-display text-4xl uppercase tracking-tight text-gray-900">About</h2>
           </div>
-          <div className="bg-white rounded-3xl divide-y divide-gray-100">
-            {ageLabel && (
-              <div className="flex items-center justify-between px-8 py-5">
-                <p className="text-xs font-semibold uppercase tracking-widest text-gray-400">Age</p>
-                <p className="text-sm text-gray-800">{ageLabel}</p>
+
+          {editing ? (
+            <div className="bg-white rounded-3xl divide-y divide-gray-100">
+              {[
+                { label: 'Name', key: 'name', type: 'text', placeholder: 'Dog\'s name' },
+                { label: 'Breed', key: 'breed', type: 'text', placeholder: 'e.g. Labrador' },
+                { label: 'Age', key: 'age', type: 'text', placeholder: 'e.g. 3 years' },
+                { label: 'Weight (lbs)', key: 'weight', type: 'number', placeholder: 'e.g. 30' },
+              ].map(({ label, key, type, placeholder }) => (
+                <div key={key} className="flex items-center justify-between px-8 py-5 gap-4">
+                  <p className="text-xs font-semibold uppercase tracking-widest text-gray-400 flex-shrink-0">{label}</p>
+                  <input
+                    type={type}
+                    value={editForm[key]}
+                    onChange={e => setEditForm(f => ({ ...f, [key]: e.target.value }))}
+                    placeholder={placeholder}
+                    className="text-sm text-gray-800 text-right bg-transparent border-b border-gray-200 focus:border-paw-blue outline-none w-full max-w-xs"
+                  />
+                </div>
+              ))}
+              <div className="px-8 py-5">
+                <button
+                  onClick={handleSave}
+                  disabled={saving || !editForm.name.trim()}
+                  className="w-full bg-paw-blue text-white text-xs font-semibold uppercase tracking-widest py-3 rounded-pill hover:bg-blue-700 transition-colors disabled:opacity-50"
+                >
+                  {saving ? 'Saving…' : 'Save changes'}
+                </button>
               </div>
-            )}
-            {dog.breed && (
-              <div className="flex items-center justify-between px-8 py-5">
-                <p className="text-xs font-semibold uppercase tracking-widest text-gray-400">Breed</p>
-                <p className="text-sm text-gray-800">{dog.breed}</p>
-              </div>
-            )}
-            {dog.weight != null && (
-              <div className="flex items-center justify-between px-8 py-5">
-                <p className="text-xs font-semibold uppercase tracking-widest text-gray-400">Weight</p>
-                <p className="text-sm text-gray-800">{dog.weight} kg</p>
-              </div>
-            )}
-            {dog.vet_records && (
-              <div className="flex items-center justify-between px-8 py-5">
-                <p className="text-xs font-semibold uppercase tracking-widest text-gray-400">Vet records</p>
-                <p className="text-sm text-gray-800">{dog.vet_records}</p>
-              </div>
-            )}
-          </div>
+            </div>
+          ) : (
+            <div className="bg-white rounded-3xl divide-y divide-gray-100">
+              {ageLabel && (
+                <div className="flex items-center justify-between px-8 py-5">
+                  <p className="text-xs font-semibold uppercase tracking-widest text-gray-400">Age</p>
+                  <p className="text-sm text-gray-800">{ageLabel}</p>
+                </div>
+              )}
+              {dog.breed && (
+                <div className="flex items-center justify-between px-8 py-5">
+                  <p className="text-xs font-semibold uppercase tracking-widest text-gray-400">Breed</p>
+                  <p className="text-sm text-gray-800">{dog.breed}</p>
+                </div>
+              )}
+              {dog.weight != null && (
+                <div className="flex items-center justify-between px-8 py-5">
+                  <p className="text-xs font-semibold uppercase tracking-widest text-gray-400">Weight</p>
+                  <p className="text-sm text-gray-800">{dog.weight} lbs</p>
+                </div>
+              )}
+              {dog.vet_records && (
+                <div className="flex items-center justify-between px-8 py-5">
+                  <p className="text-xs font-semibold uppercase tracking-widest text-gray-400">Vet records</p>
+                  <p className="text-sm text-gray-800">{dog.vet_records}</p>
+                </div>
+              )}
+            </div>
+          )}
         </section>
 
       </div>

@@ -48,7 +48,7 @@ export default function Onboard() {
         breed: data.breed ?? '',
         size: data.size_category ?? '',
         weight: data.estimated_weight_lbs ?? '',
-        age: data.estimated_age_years ?? '',
+        age: '',
       })
       setStep(STEP_FORM)
     } catch {
@@ -240,9 +240,10 @@ export default function Onboard() {
             </div>
 
             <div className="flex flex-col gap-1">
-              <label className="text-xs font-semibold uppercase tracking-widest text-gray-400">Est. Age (years)</label>
+              <label className="text-xs font-semibold uppercase tracking-widest text-gray-400">Age</label>
               <input
                 type="text"
+                placeholder="e.g. 3 years"
                 value={form.age}
                 onChange={e => setForm(f => ({ ...f, age: e.target.value }))}
                 className="border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-800 focus:outline-none focus:border-paw-red"

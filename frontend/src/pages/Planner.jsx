@@ -3,12 +3,18 @@ import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabaseClient'
 import WalkRecommendations from '../components/planner/WalkRecommendations'
 import WeatherBar from '../components/planner/WeatherBar'
+import MapView from '../components/planner/MapView'
+import BreedUploader from '../components/planner/BreedUploader'
 
 export default function Planner() {
   const [breed, setBreed] = useState(null)
   const [selectedDog, setSelectedDog] = useState(null)
   const [dogs, setDogs] = useState([])
   const [loading, setLoading] = useState(true)
+  const [routeData, setRouteData] = useState(null)
+  const [routeLoading, setRouteLoading] = useState(false)
+  const [routeError, setRouteError] = useState(null)
+  const [originCoords, setOriginCoords] = useState(null)
   const resultsRef = useRef(null)
   const navigate = useNavigate()
 
@@ -24,9 +30,54 @@ export default function Planner() {
     })
   }, [])
 
+  async function fetchRoute(dog, overrideBreed) {
+    const effectiveBreed = overrideBreed ?? dog.breed ?? ''
+    setRouteData(null)
+    setRouteError(null)
+    setRouteLoading(true)
+    try {
+      const coords = await new Promise((resolve, reject) => {
+        if (!navigator.geolocation) return reject(new Error('Geolocation not supported'))
+        navigator.geolocation.getCurrentPosition(
+          ({ coords }) => resolve({ lat: coords.latitude, lng: coords.longitude }),
+          () => reject(new Error('Location access denied'))
+        )
+      })
+      setOriginCoords(coords)
+      const highHeat = ['French Bulldog', 'Bulldog', 'Shih Tzu', 'Pug', 'Boston Terrier', 'Boxer', 'Brachycephalic']
+      const lowHeat = ['Siberian Husky', 'Alaskan Malamute', 'Bernese Mountain Dog', 'Samoyed']
+      const heat_sensitivity = highHeat.some(b => effectiveBreed.includes(b)) ? 'high'
+        : lowHeat.some(b => effectiveBreed.includes(b)) ? 'low'
+        : 'moderate'
+
+      // Duration lookup by breed — used to size the search radius so the loop
+      // fills the recommended walk time, not just whatever park is nearby
+      const breedDurations = {
+        'Golden Retriever': 60, 'Labrador Retriever': 60, 'German Shepherd': 60,
+        'Rottweiler': 60, 'French Bulldog': 20, 'Bulldog': 20, 'Shih Tzu': 20,
+        'Yorkshire Terrier': 20, 'Chihuahua': 20, 'Dachshund': 25, 'Poodle': 45,
+        'Beagle': 45, 'Siberian Husky': 90, 'Border Collie': 90, 'Australian Shepherd': 75,
+      }
+      const target_duration_mins = breedDurations[effectiveBreed] ?? 30
+
+      const res = await fetch(
+        `/api/walks/routes?origin_lat=${coords.lat}&origin_lng=${coords.lng}&target_duration_mins=${target_duration_mins}&heat_sensitivity=${heat_sensitivity}`
+      )
+      if (!res.ok) throw new Error('Could not generate route')
+      const data = await res.json()
+      if (data.error) throw new Error(data.error)
+      setRouteData(data)
+    } catch (e) {
+      setRouteError(e.message)
+    } finally {
+      setRouteLoading(false)
+    }
+  }
+
   function handleSelectDog(dog) {
     setSelectedDog(dog)
     setBreed(dog.breed ?? null)
+    if (dog.breed) fetchRoute(dog)
     setTimeout(() => {
       resultsRef.current?.scrollIntoView({ behavior: 'smooth' })
     }, 100)
@@ -100,9 +151,24 @@ export default function Planner() {
         </div>
 
         {/* Results */}
-        {breed && (
+        {selectedDog && !breed && (
           <div ref={resultsRef}>
-            <WalkRecommendations breed={breed} />
+            <BreedUploader
+              analyzing={false}
+              onAnalysisStart={() => {}}
+              onBreedDetected={(data) => {
+                if (data?.breed) {
+                  setBreed(data.breed)
+                  fetchRoute(selectedDog, data.breed)
+                }
+              }}
+            />
+          </div>
+        )}
+        {breed && (
+          <div ref={resultsRef} className="space-y-6">
+            <WalkRecommendations breed={breed} routeData={routeData} routeLoading={routeLoading} routeError={routeError} />
+            <MapView routeData={routeData} routeLoading={routeLoading} breed={breed} originCoords={originCoords} />
           </div>
         )}
       </div>

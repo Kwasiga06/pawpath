@@ -1,168 +1,283 @@
 import os
+import json
 import httpx
 from fastapi import APIRouter, Query
+from google import genai
+from google.genai import types
 
 router = APIRouter()
 
 GOOGLE_MAPS_API_KEY = os.getenv("GOOGLE_MAPS_API_KEY")
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+
+_GEMINI_CLIENT = None
+
+
+def get_gemini_client():
+    global _GEMINI_CLIENT
+    if _GEMINI_CLIENT is None:
+        _GEMINI_CLIENT = genai.Client(api_key=GEMINI_API_KEY)
+    return _GEMINI_CLIENT
 
 
 async def check_weather(client: httpx.AsyncClient, lat: float, lon: float):
-    """Fetch weather and air quality from Google APIs."""
-    weather_resp = await client.post(
-        "https://weather.googleapis.com/v1/currentConditions:lookup",
-        params={"key": GOOGLE_MAPS_API_KEY},
-        json={
-            "location": {"latitude": lat, "longitude": lon},
-            "unitsSystem": "IMPERIAL"
+    weather = {
+        "temperature": None,
+        "feels_like": None,
+        "humidity": None,
+        "description": None,
+        "wind_speed": None,
+        "aqi": None,
+        "aqi_category": None,
+        "dominant_pollutant": None,
+    }
+
+    try:
+        weather_resp = await client.get(
+            "https://weather.googleapis.com/v1/currentConditions:lookup",
+            params={
+                "key": GOOGLE_MAPS_API_KEY,
+                "location.latitude": lat,
+                "location.longitude": lon,
+                "unitsSystem": "IMPERIAL",
+            }
+        )
+        wd = weather_resp.json()
+        if "error" not in wd:
+            weather["temperature"] = wd.get("temperature", {}).get("degrees")
+            weather["feels_like"] = wd.get("feelsLikeTemperature", {}).get("degrees")
+            weather["humidity"] = wd.get("relativeHumidity")
+            weather["description"] = wd.get("weatherCondition", {}).get("description", {}).get("text")
+            weather["wind_speed"] = wd.get("wind", {}).get("speed", {}).get("value")
+    except Exception:
+        pass
+
+    try:
+        aqi_resp = await client.post(
+            "https://airquality.googleapis.com/v1/currentConditions:lookup",
+            params={"key": GOOGLE_MAPS_API_KEY},
+            json={"location": {"latitude": lat, "longitude": lon}}
+        )
+        aqi_data = aqi_resp.json()
+        indexes = aqi_data.get("indexes", [])
+        aqi_index = next((i for i in indexes if i.get("code") == "usa_epa"), indexes[0] if indexes else {})
+        weather["aqi"] = aqi_index.get("aqi")
+        weather["aqi_category"] = aqi_index.get("category")
+        weather["dominant_pollutant"] = aqi_index.get("dominantPollutant")
+    except Exception:
+        pass
+
+    return weather
+
+
+async def find_nearby_parks(client: httpx.AsyncClient, lat: float, lon: float, radius: int):
+    places_resp = await client.get(
+        "https://maps.googleapis.com/maps/api/place/nearbysearch/json",
+        params={
+            "location": f"{lat},{lon}",
+            "radius": radius,
+            "type": "park",
+            "key": GOOGLE_MAPS_API_KEY,
         }
     )
-    weather_data = weather_resp.json()
+    parks = []
+    for place in places_resp.json().get("results", [])[:5]:
+        parks.append({
+            "name": place.get("name"),
+            "address": place.get("vicinity"),
+            "lat": place["geometry"]["location"]["lat"],
+            "lng": place["geometry"]["location"]["lng"],
+            "rating": place.get("rating"),
+        })
+    return parks
 
-    aqi_resp = await client.post(
-        "https://airquality.googleapis.com/v1/currentConditions:lookup",
-        params={"key": GOOGLE_MAPS_API_KEY},
-        json={"location": {"latitude": lat, "longitude": lon}}
+
+def compute_walk_score(weather: dict) -> int:
+    """Return a 0–100 walk score from current weather and AQI data."""
+    score = 100
+
+    temp = weather.get("feels_like") or weather.get("temperature")
+    if temp is not None:
+        if temp < 20:
+            score -= 40
+        elif temp < 32:
+            score -= 20
+        elif temp < 45:
+            score -= 5
+        elif temp <= 75:
+            pass  # ideal range
+        elif temp <= 85:
+            score -= 10
+        elif temp <= 95:
+            score -= 25
+        else:
+            score -= 45
+
+    humidity = weather.get("humidity")
+    if humidity is not None:
+        if humidity > 90:
+            score -= 15
+        elif humidity > 75:
+            score -= 8
+
+    wind = weather.get("wind_speed")
+    if wind is not None:
+        if wind > 30:
+            score -= 20
+        elif wind > 20:
+            score -= 10
+        elif wind > 15:
+            score -= 5
+
+    aqi = weather.get("aqi")
+    if aqi is not None:
+        if aqi > 200:
+            score -= 50
+        elif aqi > 150:
+            score -= 35
+        elif aqi > 100:
+            score -= 20
+        elif aqi > 50:
+            score -= 8
+
+    desc = (weather.get("description") or "").lower()
+    if any(w in desc for w in ("thunder", "storm", "tornado", "hurricane")):
+        score -= 40
+    elif any(w in desc for w in ("rain", "drizzle", "shower", "sleet", "snow", "hail", "blizzard", "freezing")):
+        score -= 15
+    elif any(w in desc for w in ("fog", "mist", "smoke", "haze", "dust")):
+        score -= 8
+
+    return max(0, min(100, score))
+
+
+async def select_park_with_gemini(weather: dict, parks: list, heat_sensitivity: str, target_duration_mins: int):
+    prompt = f"""
+You are a dog walking assistant. Based on current weather and air quality conditions, select
+the best nearby park for a dog walk and provide safety guidance.
+
+Current conditions:
+- Temperature: {f"{weather.get('temperature')}°F (feels like {weather.get('feels_like')}°F)" if weather.get('temperature') is not None else 'unavailable'}
+- Weather: {weather.get('description') or 'unavailable'}
+- Humidity: {f"{weather.get('humidity')}%" if weather.get('humidity') is not None else 'unavailable'}
+- Wind: {f"{weather.get('wind_speed')} mph" if weather.get('wind_speed') is not None else 'unavailable'}
+- AQI: {f"{weather.get('aqi')} ({weather.get('aqi_category')})" if weather.get('aqi') is not None else 'unavailable'}
+- Dominant pollutant: {weather.get('dominant_pollutant') or 'unavailable'}
+
+Dog profile:
+- Heat sensitivity: {heat_sensitivity} (low = tolerates heat, high = very heat-sensitive)
+- Target walk duration: {target_duration_mins} minutes total (round trip loop)
+
+Nearby parks:
+{json.dumps(parks, indent=2)}
+
+AQI scale: 0-50 Good, 51-100 Moderate, 101-150 Unhealthy for sensitive groups, 151+ Unhealthy.
+
+Return JSON:
+{{
+  "selected_park_index": <0-based index>,
+  "recommendation": "good_to_walk" | "caution" | "not_recommended",
+  "warnings": ["<specific warning if any>"],
+  "walk_tips": ["<1-2 short tips tailored to today's conditions>"]
+}}
+
+Pick the best park for the conditions (e.g. shaded areas in heat, avoid exposed spots in high wind).
+Only add warnings if conditions actually warrant it.
+"""
+    client = get_gemini_client()
+    response = client.models.generate_content(
+        model="gemini-2.5-flash",
+        contents=[prompt],
+        config=types.GenerateContentConfig(response_mime_type="application/json")
     )
-    aqi_data = aqi_resp.json()
-
-    # Prefer USA EPA index; fall back to the first available index
-    indexes = aqi_data.get("indexes", [])
-    aqi_index = next((i for i in indexes if i.get("code") == "usa_epa"), indexes[0] if indexes else {})
-
-    return {
-        "temperature": weather_data.get("temperature", {}).get("degrees"),
-        "feels_like": weather_data.get("feelsLikeTemperature", {}).get("degrees"),
-        "humidity": weather_data.get("relativeHumidity"),
-        "description": weather_data.get("weatherCondition", {}).get("description", {}).get("text"),
-        "wind_speed": weather_data.get("wind", {}).get("speed", {}).get("value"),
-        "aqi": aqi_index.get("aqi", 0),
-        "aqi_category": aqi_index.get("category", "Unknown"),
-        "dominant_pollutant": aqi_index.get("dominantPollutant")
-    }
+    return json.loads(response.text)
 
 
-def get_walk_advisory(weather: dict, heat_sensitivity: str = "moderate"):
-    """Generate walk recommendations based on weather and dog profile."""
-    temp = weather["feels_like"]
-    aqi = weather["aqi"]
-    warnings = []
-    walk_ok = True
-
-    # Temperature checks
-    if temp >= 90:
-        warnings.append("Dangerously hot — pavement can burn paws. Walk early morning or late evening.")
-        if heat_sensitivity == "high":
-            warnings.append("This breed is especially heat-sensitive. Keep walks very short or skip.")
-        walk_ok = False
-    elif temp >= 80:
-        warnings.append("Hot conditions — bring water and keep the walk short.")
-        if heat_sensitivity == "high":
-            warnings.append("This breed is heat-sensitive. Consider waiting for cooler temps.")
-    elif temp <= 20:
-        warnings.append("Very cold — short-coated or small dogs may need a jacket.")
-        walk_ok = False
-    elif temp <= 35:
-        warnings.append("Cold out — watch for ice and salt on sidewalks.")
-
-    # Air quality checks (EPA AQI: 0-50 good, 51-100 moderate, 101-150 sensitive, 151+ unhealthy)
-    aqi_category = weather.get("aqi_category", "")
-    if aqi > 150:
-        warnings.append(f"Poor air quality ({aqi_category}) — avoid outdoor exercise.")
-        walk_ok = False
-    elif aqi > 100:
-        warnings.append(f"Air quality is unhealthy for sensitive groups ({aqi_category}) — keep the walk short.")
-        if heat_sensitivity == "high":
-            walk_ok = False
-    elif aqi > 50:
-        warnings.append(f"Moderate air quality ({aqi_category}) — consider a shorter walk.")
-
-    recommendation = "good_to_walk" if walk_ok else "not_recommended"
-
-    return {
-        "recommendation": recommendation,
-        "warnings": warnings
-    }
+async def compute_route(client: httpx.AsyncClient, origin_lat: float, origin_lng: float, dest_lat: float, dest_lng: float):
+    """Compute a loop walk: origin → park → origin."""
+    route_resp = await client.post(
+        "https://routes.googleapis.com/directions/v2:computeRoutes",
+        headers={
+            "X-Goog-Api-Key": GOOGLE_MAPS_API_KEY,
+            "X-Goog-FieldMask": "routes.duration,routes.distanceMeters,routes.polyline.encodedPolyline",
+        },
+        json={
+            "origin": {
+                "location": {"latLng": {"latitude": origin_lat, "longitude": origin_lng}}
+            },
+            "destination": {
+                "location": {"latLng": {"latitude": origin_lat, "longitude": origin_lng}}
+            },
+            "intermediates": [
+                {"location": {"latLng": {"latitude": dest_lat, "longitude": dest_lng}}}
+            ],
+            "travelMode": "WALK",
+            "languageCode": "en-US",
+            "units": "IMPERIAL",
+        }
+    )
+    return route_resp.json()
 
 
 @router.get("/routes")
 async def get_walking_route(
-    origin_lat: float = Query(..., description="Starting point latitude"),
-    origin_lng: float = Query(..., description="Starting point longitude"),
-    distance_preference: str = Query("moderate", description="short, moderate, or long"),
-    heat_sensitivity: str = Query("moderate", description="Dog's heat sensitivity: low, moderate, or high")
+    origin_lat: float = Query(...),
+    origin_lng: float = Query(...),
+    target_duration_mins: int = Query(30, description="Target total loop walk duration in minutes"),
+    heat_sensitivity: str = Query("moderate", description="low, moderate, or high"),
 ):
-    radius_map = {
-        "short": 800,
-        "moderate": 1600,
-        "long": 3200
-    }
-    radius = radius_map.get(distance_preference, 1600)
+    # Walking speed ~80 m/min. The loop is there-and-back, so the park
+    # needs to be ~half the target duration away.
+    one_way_mins = target_duration_mins / 2
+    radius = max(400, min(int(one_way_mins * 80), 4000))
 
     async with httpx.AsyncClient() as client:
-        # 1. Check weather first
+        # 1. Weather + AQI
         weather = await check_weather(client, origin_lat, origin_lng)
-        advisory = get_walk_advisory(weather, heat_sensitivity)
 
-        # 2. If conditions are bad, downgrade the walk distance
-        if advisory["recommendation"] == "not_recommended":
-            radius = radius_map["short"]
-
-        # 3. Find a nearby park
-        places_resp = await client.get(
-            "https://maps.googleapis.com/maps/api/place/nearbysearch/json",
-            params={
-                "location": f"{origin_lat},{origin_lng}",
-                "radius": radius,
-                "type": "park",
-                "key": GOOGLE_MAPS_API_KEY
-            }
-        )
-        places_data = places_resp.json()
-
-        if not places_data.get("results"):
+        # 2. Nearby parks
+        parks = await find_nearby_parks(client, origin_lat, origin_lng, radius)
+        if not parks:
             return {"error": "No nearby parks found"}
 
-        destination = places_data["results"][0]
-        dest_lat = destination["geometry"]["location"]["lat"]
-        dest_lng = destination["geometry"]["location"]["lng"]
+        # 3. Gemini selects best park and generates advisory
+        gemini_result = await select_park_with_gemini(weather, parks, heat_sensitivity, target_duration_mins)
 
-        # 4. Get walking directions
-        directions_resp = await client.get(
-            "https://maps.googleapis.com/maps/api/directions/json",
-            params={
-                "origin": f"{origin_lat},{origin_lng}",
-                "destination": f"{origin_lat},{origin_lng}",
-                "waypoints": f"{dest_lat},{dest_lng}",
-                "mode": "walking",
-                "key": GOOGLE_MAPS_API_KEY
-            }
-        )
-        directions_data = directions_resp.json()
+        selected_idx = min(gemini_result.get("selected_park_index", 0), len(parks) - 1)
+        destination = parks[selected_idx]
 
-    if not directions_data.get("routes"):
+        # 4. Routes API v2 for walking directions
+        route_data = await compute_route(client, origin_lat, origin_lng, destination["lat"], destination["lng"])
+
+    routes = route_data.get("routes", [])
+    if not routes:
         return {"error": "Could not generate a walking route"}
 
-    route = directions_data["routes"][0]
+    route = routes[0]
+    distance_m = route.get("distanceMeters", 0)
+    # Duration comes back as e.g. "342s"
+    duration_s = int(route.get("duration", "0s").rstrip("s"))
+
+    distance_miles = round(distance_m / 1609.34, 1)
+    duration_mins = round(duration_s / 60)
+
+    walk_score = compute_walk_score(weather)
 
     return {
+        "walk_score": walk_score,
         "weather": weather,
-        "advisory": advisory,
-        "destination": {
-            "name": destination.get("name"),
-            "address": destination.get("vicinity"),
-            "lat": dest_lat,
-            "lng": dest_lng
+        "advisory": {
+            "recommendation": gemini_result.get("recommendation", "good_to_walk"),
+            "warnings": gemini_result.get("warnings", []),
+            "walk_tips": gemini_result.get("walk_tips", []),
         },
-        "total_distance": route["legs"][0]["distance"]["text"],
-        "total_duration": route["legs"][0]["duration"]["text"],
-        "polyline": route["overview_polyline"]["points"],
-        "steps": [
-            {
-                "instruction": step["html_instructions"],
-                "distance": step["distance"]["text"],
-                "duration": step["duration"]["text"]
-            }
-            for step in route["legs"][0]["steps"]
-        ]
+        "destination": {
+            "name": destination["name"],
+            "address": destination["address"],
+            "lat": destination["lat"],
+            "lng": destination["lng"],
+        },
+        "total_distance": f"{distance_miles} mi",
+        "total_duration": f"{duration_mins} mins",
+        "polyline": route.get("polyline", {}).get("encodedPolyline", ""),
     }

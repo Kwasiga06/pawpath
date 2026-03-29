@@ -70,7 +70,7 @@ async def identify_dog(
         # 3. Call Gemini with JSON Response Mime Type
         # This ensures the model returns ONLY valid JSON
         response = client.models.generate_content(
-            model="gemini-3.0-flash",
+            model="gemini-3-flash-preview",
             contents=[prompt] + images,
             config=types.GenerateContentConfig(
                 response_mime_type="application/json"
