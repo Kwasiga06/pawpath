@@ -1,41 +1,32 @@
 import { useState, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabaseClient'
-import BreedUploader from '../components/planner/BreedUploader'
 import WalkRecommendations from '../components/planner/WalkRecommendations'
 import WeatherBar from '../components/planner/WeatherBar'
 
 export default function Planner() {
   const [breed, setBreed] = useState(null)
-  const [analyzing, setAnalyzing] = useState(false)
-  const [userId, setUserId] = useState(null)
+  const [selectedDog, setSelectedDog] = useState(null)
+  const [dogs, setDogs] = useState([])
+  const [loading, setLoading] = useState(true)
   const resultsRef = useRef(null)
   const navigate = useNavigate()
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
       if (!session) { navigate('/'); return }
-      setUserId(session.user.id)
+      const { data } = await supabase
+        .from('dogs')
+        .select('*')
+        .eq('owner_id', session.user.id)
+      setDogs(data ?? [])
+      setLoading(false)
     })
   }, [])
 
-  function handleAnalysisStart() {
-    setAnalyzing(true)
-  }
-
-  async function handleBreedDetected(result) {
-    const detectedBreed = result?.breed ?? null
-    setBreed(detectedBreed)
-    setAnalyzing(false)
-
-    if (detectedBreed && userId) {
-      await supabase.from('dogs').insert({
-        owner_id: userId,
-        breed: detectedBreed,
-        size: result.size_category ?? null,
-      })
-    }
-
+  function handleSelectDog(dog) {
+    setSelectedDog(dog)
+    setBreed(dog.breed ?? null)
     setTimeout(() => {
       resultsRef.current?.scrollIntoView({ behavior: 'smooth' })
     }, 100)
@@ -50,7 +41,7 @@ export default function Planner() {
           Plan Your <span className="text-paw-red">Walk</span>
         </h1>
         <p className="text-gray-500 mt-4 max-w-xl mx-auto">
-          Upload a photo of your dog to get started. We'll detect their breed and build a personalized walk plan based on today's conditions.
+          Select your dog below to get a personalized walk plan based on today's conditions.
         </p>
       </div>
 
@@ -58,23 +49,60 @@ export default function Planner() {
         {/* Weather bar */}
         <WeatherBar />
 
-        {/* Upload section */}
-        <BreedUploader onBreedDetected={handleBreedDetected} onAnalysisStart={handleAnalysisStart} analyzing={analyzing} />
+        {/* Dog selector */}
+        <div className="bg-white rounded-3xl p-8">
+          <h2 className="font-display text-3xl uppercase tracking-tight text-gray-900 mb-6">
+            Select Your Dog
+          </h2>
+
+          {loading ? (
+            <div className="flex justify-center py-10">
+              <div className="w-8 h-8 border-4 border-paw-red border-t-transparent rounded-full animate-spin" />
+            </div>
+          ) : dogs.length === 0 ? (
+            <div className="flex flex-col items-center text-center py-10 gap-4">
+              <span className="text-5xl">🐕</span>
+              <p className="text-gray-500 text-sm">You haven't added any dogs yet.</p>
+              <button
+                onClick={() => navigate('/onboard')}
+                className="bg-paw-red text-white text-sm font-semibold uppercase tracking-wide px-6 py-2 rounded-pill hover:bg-red-700 transition-colors"
+              >
+                Add Your First Dog
+              </button>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {dogs.map((dog) => (
+                <button
+                  key={dog.id}
+                  onClick={() => handleSelectDog(dog)}
+                  className={`flex items-center gap-5 p-5 rounded-2xl border-2 text-left transition-all
+                    ${selectedDog?.id === dog.id
+                      ? 'border-paw-red bg-paw-pink/10'
+                      : 'border-gray-100 hover:border-paw-red hover:shadow-sm'
+                    }`}
+                >
+                  {dog.image ? (
+                    <img src={dog.image} alt={dog.name} className="w-14 h-14 rounded-full object-cover flex-shrink-0" />
+                  ) : (
+                    <div className="w-14 h-14 rounded-full bg-paw-pink flex items-center justify-center text-2xl flex-shrink-0">
+                      🐾
+                    </div>
+                  )}
+                  <div>
+                    <p className="font-display text-xl uppercase tracking-tight text-gray-900">{dog.name || 'Unnamed'}</p>
+                    {dog.breed && <p className="text-sm text-gray-500">{dog.breed}</p>}
+                  </div>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
 
         {/* Results */}
-        {(analyzing || breed) && (
+        {breed && (
           <div ref={resultsRef}>
-            {analyzing ? (
-              <div className="bg-white rounded-3xl p-12 flex flex-col items-center gap-4">
-                <div className="w-12 h-12 border-4 border-paw-red border-t-transparent rounded-full animate-spin" />
-                <p className="font-display text-2xl uppercase tracking-tight text-gray-700">Analyzing your dog...</p>
-                <p className="text-gray-400 text-sm">Detecting breed and fetching conditions</p>
-              </div>
-            ) : (
-              <>
-                <WalkRecommendations breed={breed} />
-              </>
-            )}
+            <WalkRecommendations breed={breed} />
           </div>
         )}
       </div>

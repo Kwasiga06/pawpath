@@ -32,6 +32,7 @@ export default function Navbar() {
 
   async function handleSignOut() {
     await supabase.auth.signOut()
+    navigate('/')
   }
 
   async function handleLogIn() {

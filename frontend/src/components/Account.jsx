@@ -8,8 +8,7 @@ function Account() {
   const navigate = useNavigate()
 
   useEffect(() => {
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
-      const u = session?.user ?? null
+    async function init(u) {
       setUser(u)
       if (!u) {
         navigate('/', { replace: true })
@@ -19,6 +18,7 @@ function Account() {
       // Save pending dog from onboarding if present
       const pending = localStorage.getItem('pending_dog')
       if (pending) {
+        localStorage.removeItem('pending_dog')
         try {
           const dog = JSON.parse(pending)
           const { error } = await supabase.from('dogs').insert({
@@ -31,7 +31,6 @@ function Account() {
           })
           if (error) console.error('Dog insert error:', error)
         } catch (e) { console.error('Dog insert exception:', e) }
-        localStorage.removeItem('pending_dog')
       }
 
       supabase
@@ -39,7 +38,17 @@ function Account() {
         .select('*')
         .eq('owner_id', u.id)
         .then(({ data }) => setDogs(data ?? []))
+    }
+
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      init(session?.user ?? null)
     })
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      init(session?.user ?? null)
+    })
+
+    return () => subscription.unsubscribe()
   }, [navigate])
 
   if (user === undefined) return null
@@ -77,12 +86,20 @@ function Account() {
               <p className="text-sm font-semibold uppercase tracking-widest text-paw-blue mb-1">Your pals</p>
               <h2 className="font-display text-4xl uppercase tracking-tight text-gray-900">My Dogs</h2>
             </div>
-            <button
-              onClick={() => navigate('/planner')}
-              className="bg-paw-red text-white text-sm font-semibold uppercase tracking-wide px-6 py-2 rounded-pill hover:bg-red-700 transition-colors"
-            >
-              Plan My Walk
-            </button>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => navigate('/onboard')}
+                className="border border-paw-red text-paw-red text-sm font-semibold uppercase tracking-wide px-6 py-2 rounded-pill hover:bg-paw-red hover:text-white transition-colors"
+              >
+                + Add Dog
+              </button>
+              <button
+                onClick={() => navigate('/planner')}
+                className="bg-paw-red text-white text-sm font-semibold uppercase tracking-wide px-6 py-2 rounded-pill hover:bg-red-700 transition-colors"
+              >
+                Plan My Walk
+              </button>
+            </div>
           </div>
 
           {dogs.length === 0 ? (
